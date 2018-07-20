@@ -1,0 +1,27 @@
+{% extends 'base.html' %} 
+
+{% block content %}
+<table class="table">
+    <thead class="thead-inverse">
+        <tr>
+            <th>Server Name</th>
+            <th>1</th>
+            <th>2</th>
+            <th>3</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for server in servers %}
+        <tr>
+            <td>
+                {{ server.name }}
+                <small class="text-muted d-block">testtest</small>
+            </td>
+            <td class="align-middle">0</td>
+            <td class="align-middle">0</td>
+            <td></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}

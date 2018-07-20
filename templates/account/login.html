@@ -1,0 +1,10 @@
+{% extends 'base.html' %} 
+
+{% block content %}
+<h2>Please login to the system</h2>
+<form method="post" novalidate>
+    {% csrf_token %} 
+    {% include "includes/common_form.html" %}
+    <button type="submit" class="btn btn-success">Login</button>
+</form>
+{% endblock %}

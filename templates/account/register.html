@@ -1,0 +1,10 @@
+{% extends 'base.html' %} 
+
+{% block content %}
+<h2>Create an account</h2>
+<form method="post" novalidate>
+    {% csrf_token %} 
+    {% include "includes/common_form.html" %}
+    <button type="submit" class="btn btn-success">Create an account</button>
+</form>
+{% endblock %}
