@@ -22,4 +22,9 @@ def save_user_ssh_profile(sender, instance, **kwargs):
 
 class Server(models.Model):
     name = models.CharField(max_length=255)
-    user = models.ForeignKey(User, related_name='servers', on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, related_name='servers', on_delete=models.CASCADE)
+
+class Application(models.Model):
+    name = models.CharField(max_length=255)
+    version = models.CharField(max_length=255)
+    server = models.ForeignKey(Server, related_name='applications', on_delete=models.CASCADE)
