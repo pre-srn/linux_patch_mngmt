@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import Server, MyModel, SSHProfile
+from .models import Server, SSHProfile
 
 admin.site.register(SSHProfile)
 admin.site.register(Server)
-admin.site.register(MyModel)
