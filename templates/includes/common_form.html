@@ -15,13 +15,13 @@
     {% if form.is_bound %}
         {% if field.errors %}
 
-        {% render_field field class="form-control is-invalid" autocomplete="off" %}
+            {% render_field field class="form-control is-invalid" autocomplete="off" %}
 
-        {% for error in field.errors %}
-            <div class="invalid-feedback">
-                {{ error }}
-            </div>
-        {% endfor %}
+            {% for error in field.errors %}
+                <div class="invalid-feedback">
+                    {{ error }}
+                </div>
+            {% endfor %}
         
         {% else %}
             {% render_field field class="form-control is-valid" autocomplete="off" %}

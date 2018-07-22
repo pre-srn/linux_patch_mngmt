@@ -2,11 +2,10 @@ from django import forms
 from .models import SSHProfile
 
 class SetupSSHForm(forms.ModelForm):
-
-    ssh_server_address = forms.CharField(
-        max_length=255,
-        required=True,
-        )
+    ssh_server_address = forms.CharField(required=True)
+    ssh_server_port = forms.CharField(required=True)
+    ssh_username = forms.CharField(required=True)
+    ssh_passphase = forms.CharField(required=True)
 
     class Meta:
         model = SSHProfile

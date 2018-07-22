@@ -7,7 +7,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 
 from django.http import HttpResponse
-from .models import Server
+from .models import Server, SSHProfile
 from .forms import SetupSSHForm
 
 @login_required
@@ -19,7 +19,7 @@ def home(request):
 
 def register(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = UserCreationForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save()
             auth_login(request, user)
@@ -32,9 +32,9 @@ def register(request):
 def setup_ssh(request):
     user = request.user
     if request.method == 'POST':
-        form = SetupSSHForm(request.POST)
+        form = SetupSSHForm(request.POST, request.FILES, instance=user.sshprofile)
         if form.is_valid():
-            # topic = form.save()
+            form.save()
             return redirect('home')  
     else:
         form = SetupSSHForm(instance=user.sshprofile)
