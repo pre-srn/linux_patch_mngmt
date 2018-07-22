@@ -23,7 +23,7 @@ urlpatterns = [
     path('account/login/', auth_views.LoginView.as_view(template_name='account/login.html'), name='login'),
     path('account/logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('account/register/', main_views.register, name='register'),
-    path('account/setup_ssh/', main_views.setup_ssh, name='setup_ssh'),
+    path('account/setup/ssh/', main_views.setup_ssh, name='setup_ssh'),
 
     path('account/config/password/', auth_views.PasswordChangeView.as_view(template_name='account/config_password.html'), name='password_change'),
     path('account/config/password/done', main_views.config_password_done, name='password_change_done'),
