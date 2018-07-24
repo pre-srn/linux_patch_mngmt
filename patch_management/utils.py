@@ -13,7 +13,7 @@ def test_ssh_connection(input_form, tmp_ssh_key):
                         }
                     )
     try:
-        result = c.run('ls')
+        result = c.run('uname -s')
         c.close()
         return True
     except Exception:

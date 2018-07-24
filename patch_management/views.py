@@ -12,7 +12,6 @@ from .forms import SetupSSHForm
 from .utils import *
 
 @login_required
-# TODO add my own @....
 def home(request):
     if not request.user.sshprofile.ssh_server_address:
         return redirect('setup_ssh')
