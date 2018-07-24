@@ -11,13 +11,6 @@ from .models import Server, SSHProfile
 from .forms import SetupSSHForm
 from .utils import *
 
-@login_required
-def home(request):
-    if not request.user.sshprofile.ssh_server_address:
-        return redirect('setup_ssh')
-    servers = Server.objects.all()
-    return render(request, 'home.html', {'servers': servers})
-
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST, request.FILES)
@@ -30,26 +23,43 @@ def register(request):
     return render(request, 'account/register.html', {'form': form})
 
 @login_required
+def home(request):
+    if not request.user.sshprofile.ssh_server_address:
+        return redirect('setup_ssh')
+    servers = Server.objects.all()
+    return render(request, 'home.html', {'servers': servers})
+
+@login_required
 def setup_ssh(request):
     if request.method == 'POST':
         form = SetupSSHForm(request.POST, request.FILES, instance=request.user.sshprofile)
         if form.is_valid():
 
-            # Test connection
             if 'ssh_key' in request.FILES:
-                tmp_filename = create_tmp_file(request.FILES['ssh_key'])
+                tmp_ssh_key = create_tmp_file(request.FILES['ssh_key'])
             else:
-                tmp_filename = str(form.instance.ssh_key)
-            
-            if test_ssh_connection(form, tmp_filename):
-                messages.success(request, 'Successfully connected to your server')
-                # form.save()
-                return redirect('home')  
+                # In case the file already exists on the server
+                tmp_ssh_key = str(form.instance.ssh_key)
+
+            is_connected, ssh_connection = connect_ssh(str(form.instance.ssh_server_address), 
+                                                    str(form.instance.ssh_username), 
+                                                    str(form.instance.ssh_server_port), 
+                                                    tmp_ssh_key, 
+                                                    str(form.instance.ssh_passphase))
+                                 
+            # Test connection                   
+            if is_connected:
+                if (is_puppet_running(ssh_connection)):
+                    messages.success(request, 'Successfully connected to your server')
+                    # form.save()
+                    return redirect('home')
+                else:
+                    messages.error(request, 'Puppet is not installed/running on your server. Please recheck again.')
             else:
                 messages.error(request, 'Cannot connect to your server. Please check your connection.')
 
             if 'ssh_key' in request.FILES:
-                delete_tmp_file(tmp_filename)
+                delete_tmp_file(tmp_ssh_key)
     else:
         form = SetupSSHForm(instance=request.user.sshprofile)
     return render(request, 'account/setup_ssh.html', {'form': form, 'user': request.user})
