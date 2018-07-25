@@ -3,6 +3,10 @@ from .models import SSHProfile
 
 class SetupSSHForm(forms.ModelForm):
 
+    ssh_passphase = forms.CharField(widget=forms.PasswordInput, 
+                                    label ="SSH key passphase",
+                                    help_text="Note: This value will NOT be saved anywhere.")
+
     class Meta:
         model = SSHProfile
         fields = ['ssh_server_address', 'ssh_server_port', 'ssh_username', 'ssh_key', 'ssh_passphase']
@@ -11,7 +15,9 @@ class SetupSSHForm(forms.ModelForm):
             "ssh_server_port": "SSH server port",
             "ssh_username": "SSH username",
             "ssh_key": "SSH private key",
-            "ssh_passphase": "SSH key passphase",
+        }
+        help_texts = {
+            "ssh_username": "Note: This must be a non-root user who is allowed to run Mcollective commands"
         }
 
     def __init__(self, *args, **kwargs):
