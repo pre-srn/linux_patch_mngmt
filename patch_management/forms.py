@@ -3,7 +3,8 @@ from .models import SSHProfile
 
 class SetupSSHForm(forms.ModelForm):
 
-    ssh_passphase = forms.CharField(widget=forms.PasswordInput, 
+    ssh_passphase = forms.CharField(widget=forms.PasswordInput,
+                                    max_length=128,
                                     label ="SSH key passphase",
                                     help_text="Note: This value will NOT be saved anywhere.")
 
