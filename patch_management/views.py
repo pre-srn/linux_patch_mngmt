@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 
 from django.http import HttpResponse
 from .decorators import ssh_setup_required
-from .models import Server, SSHProfile
+from .models import System, SSHProfile
 from .forms import SetupSSHForm
 from .utils import *
 

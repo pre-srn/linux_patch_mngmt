@@ -20,12 +20,13 @@ def create_user_ssh_profile(sender, instance, created, **kwargs):
 def save_user_ssh_profile(sender, instance, **kwargs):
     instance.sshprofile.save()
 
-class Server(models.Model):
+class System(models.Model):
     hostname = models.CharField(max_length=255)
     connected = models.BooleanField(default=False)
-    server_os = models.CharField(max_length=255)
-    server_version = models.CharField(max_length=255)
-    owner = models.ForeignKey(User, related_name='servers', on_delete=models.CASCADE)
+    system_os_name = models.CharField(max_length=255)
+    system_os_version = models.CharField(max_length=255)
+    system_kernel = models.CharField(max_length=255)
+    owner = models.ForeignKey(User, related_name='systems', on_delete=models.CASCADE)
 
     class Meta:
         unique_together = (("hostname", "owner"),)
@@ -34,4 +35,4 @@ class Package(models.Model):
     name = models.CharField(max_length=255)
     current_version = models.CharField(max_length=255)
     new_version = models.CharField(max_length=255, null=True)
-    server = models.ForeignKey(Server, related_name='packages', on_delete=models.CASCADE)
+    system = models.ForeignKey(System, related_name='packages', on_delete=models.CASCADE)
