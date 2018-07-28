@@ -7,6 +7,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 
 from django.http import HttpResponse
+from .decorators import ssh_setup_required
 from .models import Server, SSHProfile
 from .forms import SetupSSHForm
 from .utils import *
@@ -23,11 +24,20 @@ def register(request):
     return render(request, 'account/register.html', {'form': form})
 
 @login_required
+@ssh_setup_required
 def home(request):
-    if not request.user.sshprofile.ssh_server_address:
-        return redirect('setup_ssh')
     servers = Server.objects.all()
     return render(request, 'home.html', {'servers': servers})
+
+@login_required
+@ssh_setup_required
+def server(request):
+    pass
+
+@login_required
+@ssh_setup_required
+def task(request):
+    pass
 
 @login_required
 def setup_ssh(request):
@@ -50,7 +60,7 @@ def setup_ssh(request):
             # Test connection                   
             if is_connected:
                 if (is_puppet_running(ssh_connection)):
-                    messages.success(request, 'Successfully connected to your server')
+                    messages.info(request, 'Successfully connected to your server. A task to get system information has been initiated.')
                     # form.save()
                     return redirect('home')
                 else:

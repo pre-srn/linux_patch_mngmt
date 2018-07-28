@@ -1,17 +1,16 @@
 from django.test import TestCase
 from django.urls import reverse, resolve
 from django.contrib.auth.forms import UserCreationForm
-from .views import home, register
+from ..views import home, register
 
-class HomeTests(TestCase):
-    def test_home_view_status_code(self):
-        url = reverse('home')
-        response = self.client.get(url)
-        self.assertEquals(response.status_code, 200)
+class HomeLoginRequiredTests(TestCase):
+    def setUp(self):
+        self.url = reverse('home')
+        self.response = self.client.get(self.url)
 
-    def test_home_url_resolves_home_view(self):
-        view = resolve('/')
-        self.assertEquals(view.func, home)
+    def test_home_url_required_login(self):
+        login_url = reverse('login')
+        self.assertRedirects(self.response, '{login_url}?next={url}'.format(login_url=login_url, url=self.url))
 
 class RegisterTests(TestCase):
     def setUp(self):
