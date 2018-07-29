@@ -25,6 +25,7 @@ urlpatterns = [
     path('account/register/', main_views.register, name='register'),
     path('account/setup/ssh/', main_views.setup_ssh, name='setup_ssh'),
 
+    path('account/config/ssh/', main_views.setup_ssh, name='config_ssh'),
     path('account/config/password/', auth_views.PasswordChangeView.as_view(template_name='account/config_password.html'), name='password_change'),
     path('account/config/password/done', main_views.config_password_done, name='password_change_done'),
     # path('account/config/ssh/', main_views.config_ssh, name='config_ssh'),

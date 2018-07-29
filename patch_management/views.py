@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 
+from django.urls import resolve
 from django.contrib import messages
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.models import User
@@ -9,12 +10,12 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from .decorators import ssh_setup_required
 from .models import System, SSHProfile
-from .forms import SetupSSHForm
+from .forms import SetupSSHForm, SSHPassphaseSubmitForm
 from .utils import *
 
 def register(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST, request.FILES)
+        form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             auth_login(request, user)
@@ -26,18 +27,42 @@ def register(request):
 @login_required
 @ssh_setup_required
 def home(request):
-    servers = Server.objects.all()
-    return render(request, 'home.html', {'servers': servers})
+    systems = System.objects.filter(owner=request.user, connected=True)
+    if request.method == 'POST':
+        form = SSHPassphaseSubmitForm(request.POST)
+        if form.is_valid():
+            ssh_profile = request.user.sshprofile
+            is_connected, ssh_connection = connect_ssh(str(ssh_profile.ssh_server_address), 
+                                            str(ssh_profile.ssh_username),
+                                            str(ssh_profile.ssh_server_port),
+                                            str(ssh_profile.ssh_key),
+                                            str(form.cleaned_data['ssh_passphase']))
+            if is_connected:
+                ssh_run_get_system_info(ssh_connection, request.user) # will be changed to run in Celery
+                messages.success(request, 'Task initiated')
+                return redirect('home')
+            else:
+                messages.error(request, 'Cannot connect to your server. Please check your SSH passphase.')
+    else:
+        form = SSHPassphaseSubmitForm()
+    return render(request, 'home.html', {'form': form, 'systems': systems})
 
 @login_required
 @ssh_setup_required
-def server(request):
+def manage_patch(request):
     pass
 
 @login_required
 @ssh_setup_required
-def task(request):
+def list_task(request):
     pass
+
+@login_required
+@ssh_setup_required
+def get_system_info(request):
+    if request.method == 'POST':
+        pass
+    return redirect('home') 
 
 @login_required
 def setup_ssh(request):
@@ -51,28 +76,32 @@ def setup_ssh(request):
                 # In case the file already exists on the server
                 tmp_ssh_key = str(form.instance.ssh_key)
 
-            is_connected, ssh_connection = connect_ssh(str(form.instance.ssh_server_address), 
-                                                    str(form.instance.ssh_username), 
-                                                    str(form.instance.ssh_server_port), 
+            is_connected, ssh_connection = connect_ssh(str(form.cleaned_data['ssh_server_address']), 
+                                                    str(form.cleaned_data['ssh_username']), 
+                                                    str(form.cleaned_data['ssh_server_port']), 
                                                     tmp_ssh_key, 
-                                                    str(form.instance.ssh_passphase))
+                                                    str(form.cleaned_data['ssh_passphase']))
                                  
-            # Test connection                   
+            # Test connection
             if is_connected:
                 if (is_puppet_running(ssh_connection)):
-                    messages.info(request, 'Successfully connected to your server. A task to get system information has been initiated.')
-                    # form.save()
+                    messages.info(request, 'Successfully connected to your Puppet master server. \
+                                            A task to get system information has been initiated.')
+                    form.save()
+                    ssh_run_get_system_info(ssh_connection, request.user) # will be changed to run in Celery
+                    if 'ssh_key' in request.FILES: delete_tmp_file(tmp_ssh_key)
                     return redirect('home')
                 else:
-                    messages.error(request, 'Puppet is not installed/running on your server. Please recheck again.')
+                    messages.error(request, 'Puppet or Mcollective is not installed/running on your server. Please recheck again.')
             else:
                 messages.error(request, 'Cannot connect to your server. Please check your connection.')
-
-            if 'ssh_key' in request.FILES:
-                delete_tmp_file(tmp_ssh_key)
+            
+            if 'ssh_key' in request.FILES: delete_tmp_file(tmp_ssh_key)
     else:
         form = SetupSSHForm(instance=request.user.sshprofile)
-    return render(request, 'account/setup_ssh.html', {'form': form, 'user': request.user})
+
+    url_name = resolve(request.path_info).url_name
+    return render(request, 'account/'+ url_name + '.html', {'form': form, 'user': request.user})
 
 @login_required
 def config_password_done(request):

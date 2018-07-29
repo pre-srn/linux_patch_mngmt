@@ -1,0 +1,10 @@
+{% extends 'base.html' %} 
+
+{% block content %}
+<h2>SSH configuration</h2>
+<form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %} 
+    {% include "includes/common_form.html" %}
+    <button type="submit" class="btn btn-success">Save and test connection</button>
+</form>
+{% endblock %}

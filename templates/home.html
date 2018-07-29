@@ -1,23 +1,30 @@
 {% extends 'base.html' %} 
 
 {% block content %}
+<form method="post" novalidate>
+    {% csrf_token %}
+    {% include "includes/inline_form.html" %}
+    <button type="submit" class="btn btn-info">Get/Re-check system information</button>
+</form>
+
 <table class="table">
     <thead class="thead-inverse">
         <tr>
             <th>Connected servers</th>
             <th>System information</th>
             <th>Update information</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
-        {% for server in servers %}
+        {% for system in systems %}
         <tr>
             <td>
-                {{ server.hostname }}
-                <small class="text-muted d-block">testtest</small>
+                {{ system.hostname }}
             </td>
-            <td class="align-middle">0</td>
-            <td class="align-middle">5555</td>
+            <td class="align-middle">{{ system.system_os_name }}</td>
+            <td class="align-middle">0 Updates available</td>
+            <td><a href="#">Manage</a></td>
         </tr>
         {% endfor %}
     </tbody>
