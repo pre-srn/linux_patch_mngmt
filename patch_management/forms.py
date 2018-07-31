@@ -26,4 +26,6 @@ class SetupSSHForm(forms.ModelForm):
             self.fields[key].required = True
 
 class SSHPassphaseSubmitForm(forms.Form):
-    ssh_passphase = forms.CharField(widget=forms.PasswordInput, required=True, help_text="Please enter your SSH passphase here. Note that this value will NOT be saved anywhere.")
+    ssh_passphase = forms.CharField(widget=forms.PasswordInput, 
+                    required=True, 
+                    help_text="Please enter your SSH passphase here. Note that this value will NOT be saved anywhere.")

@@ -28,6 +28,22 @@ def register(request):
 @ssh_setup_required
 def home(request):
     systems = System.objects.filter(owner=request.user, connected=True)
+    form = SSHPassphaseSubmitForm()
+    return render(request, 'home.html', {'form': form, 'systems': systems})
+
+@login_required
+@ssh_setup_required
+def manage_system(request, system_id):
+    return redirect('home')
+
+@login_required
+@ssh_setup_required
+def list_task(request):
+    pass
+
+@login_required
+@ssh_setup_required
+def get_system_info(request):
     if request.method == 'POST':
         form = SSHPassphaseSubmitForm(request.POST)
         if form.is_valid():
@@ -40,28 +56,10 @@ def home(request):
             if is_connected:
                 ssh_run_get_system_info(ssh_connection, request.user) # will be changed to run in Celery
                 messages.success(request, 'Task initiated')
-                return redirect('home')
             else:
-                messages.error(request, 'Cannot connect to your server. Please check your SSH passphase.')
-    else:
-        form = SSHPassphaseSubmitForm()
-    return render(request, 'home.html', {'form': form, 'systems': systems})
-
-@login_required
-@ssh_setup_required
-def manage_patch(request):
-    pass
-
-@login_required
-@ssh_setup_required
-def list_task(request):
-    pass
-
-@login_required
-@ssh_setup_required
-def get_system_info(request):
-    if request.method == 'POST':
-        pass
+                messages.error(request, 'Cannot connect to your Puppet master server. Your server may unavailable or your SSH passphase may incorrect.')
+        else:
+            messages.error(request, 'Please input your SSH passphase first.')
     return redirect('home') 
 
 @login_required

@@ -24,11 +24,15 @@ urlpatterns = [
     path('account/logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('account/register/', main_views.register, name='register'),
     path('account/setup/ssh/', main_views.setup_ssh, name='setup_ssh'),
-
     path('account/config/ssh/', main_views.setup_ssh, name='config_ssh'),
     path('account/config/password/', auth_views.PasswordChangeView.as_view(template_name='account/config_password.html'), name='password_change'),
-    path('account/config/password/done', main_views.config_password_done, name='password_change_done'),
-    # path('account/config/ssh/', main_views.config_ssh, name='config_ssh'),
+    path('account/config/password/done/', main_views.config_password_done, name='password_change_done'),
 
+    path('system/get/info/', main_views.get_system_info, name='get_system_info'),
+    # path('system/scan/cve/', main_views.get_system_info, name='get_system_info'),
+    path('system/<int:system_id>/', main_views.manage_system, name='manage_system'),
+    # path('system/<int:system_id>/package/<int:package_id>/update', ),
+    # path('system/<int:system_id>/package/<int:package_id>/uninstall', ),
+    
     path('admin/', admin.site.urls), # TODO remove this
 ]

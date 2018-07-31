@@ -1,5 +1,6 @@
 import os
 import tempfile
+import json
 
 from .models import System
 from fabric import Connection
@@ -40,6 +41,7 @@ def ssh_run_get_system_info(ssh_conn, request_user):
 
     connected_agents = ssh_conn.run('mco ping', hide=True)
     for line in connected_agents.stdout.split('\n'):
+        line = line.strip()
         if len(line) == 0: break
         connected_systems.append(line.split(' ', 1)[0])
 
@@ -47,6 +49,7 @@ def ssh_run_get_system_info(ssh_conn, request_user):
     sys_info_lines = iter(sys_info.stdout.split('\n'))
 
     for line in sys_info_lines: 
+        line = line.strip()
         if line[:-1] in connected_systems: # managed-centos-0.server:
             cur_connected_system = line[:-1]
             prev_line = None
@@ -62,7 +65,31 @@ def ssh_run_get_system_info(ssh_conn, request_user):
                     break
                 prev_line = curr_line
 
-    ssh_conn.run('mco shell run "rpm -qa --qf \'%{NAME} %{VERSION}-%{RELEASE}\n\' || dpkg-query -W -f=\'\${Package} \${Version}\n\'"')
+    installed_packages = ssh_conn.run('mco shell run "rpm -qa --qf \'%{NAME} %{VERSION}-%{RELEASE}\n\' || \
+                                       dpkg-query -W -f=\'\${Package} \${Version}\n\'"')
+    installed_packages_lines = iter(installed_packages.stdout.split('\n'))
+
+    updates = ssh_conn.run('mco rpc package checkupdates', pty=True)
+    updates_lines = iter(updates.stdout.split('\n'))
+
+    for line in updates_lines:
+        line = line.strip() 
+        if line in connected_systems: # managed-centos-0.server
+            cur_connected_system = line
+            outdated = ""
+            outdated_found = False
+            while True:
+                curr_line = next(updates_lines).strip()
+                if outdated_found:
+                    if "Output:" in curr_line: break
+                    outdated = outdated + curr_line
+                elif "Outdated Packages:" in curr_line:
+                    outdated = outdated + curr_line.replace('Outdated Packages:', '')
+                    outdated_found = True
+            outdated = outdated.replace(':package','"package"').replace(':version','"version"').replace(':repo','"repo"').replace('=>',':').replace(' ','')
+            json_array = json.loads(outdated)
+            for item in json_array:
+                print(item['package'] + " ver: " + item['version'])
 
     ssh_conn.close()
 

@@ -34,4 +34,8 @@ class Package(models.Model):
     name = models.CharField(max_length=255)
     current_version = models.CharField(max_length=255)
     new_version = models.CharField(max_length=255, null=True)
+    active = models.BooleanField(default=True)
     system = models.ForeignKey(System, related_name='packages', on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = (("name", "system"),)

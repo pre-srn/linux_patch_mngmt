@@ -1,7 +1,7 @@
 {% extends 'base.html' %} 
 
 {% block content %}
-<form method="post" novalidate>
+<form method="post" action="{% url 'get_system_info' %}" novalidate>
     {% csrf_token %}
     {% include "includes/inline_form.html" %}
     <button type="submit" class="btn btn-info">Get/Re-check system information</button>
@@ -12,7 +12,7 @@
         <tr>
             <th>Connected servers</th>
             <th>System information</th>
-            <th>Update information</th>
+            <th>Patch information</th>
             <th></th>
         </tr>
     </thead>
@@ -24,7 +24,7 @@
             </td>
             <td class="align-middle">{{ system.system_os_name }}</td>
             <td class="align-middle">0 Updates available</td>
-            <td><a href="#">Manage</a></td>
+            <td><a href="{% url 'manage_system' system.id %}">Manage</a></td>
         </tr>
         {% endfor %}
     </tbody>
