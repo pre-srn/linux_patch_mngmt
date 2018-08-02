@@ -1,0 +1,41 @@
+{% extends 'base.html' %} 
+
+{% block content %}
+<table class="table">
+    <thead class="thead-inverse">
+        <tr>
+            <th>Package name</th>
+            <th>Current Version</th>
+            <th>New Version</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for package in outdated_packages %}
+        <tr>
+            <td>{{ package.name }}</td>
+            <td>{{ package.current_version }}</td>
+            <td>{{ package.new_version }}</td>
+            <td><a href="#">Update</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<br><br>
+<table class="table">
+    <thead class="thead-inverse">
+        <tr>
+            <th>Package name</th>
+            <th>Current Version</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for package in installed_packages %}
+        <tr>
+            <td>{{ package.name }}</td>
+            <td>{{ package.current_version }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}

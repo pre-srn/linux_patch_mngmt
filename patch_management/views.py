@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 
 from django.urls import resolve
 from django.contrib import messages
@@ -6,12 +6,13 @@ from django.contrib.auth import login as auth_login
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
+from django.db.models.functions import Lower
 
 from django.http import HttpResponse
 from .decorators import ssh_setup_required
-from .models import System, SSHProfile
+from .models import System, SSHProfile, Package
 from .forms import SetupSSHForm, SSHPassphaseSubmitForm
-from .utils import *
+from .utils import connect_ssh, is_puppet_running, ssh_run_get_system_info, create_tmp_file, delete_tmp_file
 
 def register(request):
     if request.method == 'POST':
@@ -34,7 +35,10 @@ def home(request):
 @login_required
 @ssh_setup_required
 def manage_system(request, system_id):
-    return redirect('home')
+    system = get_object_or_404(System, pk=system_id)
+    installed_packages = system.packages.filter(active=True).order_by(Lower('name'))
+    outdated_packages = installed_packages.filter(new_version__isnull=False).order_by(Lower('name'))
+    return render(request, 'system.html', {'installed_packages': installed_packages, 'outdated_packages': outdated_packages})
 
 @login_required
 @ssh_setup_required

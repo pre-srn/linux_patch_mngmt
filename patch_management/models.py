@@ -30,6 +30,12 @@ class System(models.Model):
     class Meta:
         unique_together = (("hostname", "owner"),)
 
+    def __str__(self):
+        return self.hostname
+
+    def get_available_updates_count(self):
+        return Package.objects.filter(system=self, new_version__isnull=False).count()
+
 class Package(models.Model):
     name = models.CharField(max_length=255)
     current_version = models.CharField(max_length=255)
@@ -39,3 +45,6 @@ class Package(models.Model):
 
     class Meta:
         unique_together = (("name", "system"),)
+
+    def __str__(self):
+        return self.name + ' (' + self.current_version + ')'
