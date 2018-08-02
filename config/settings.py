@@ -142,3 +142,6 @@ MESSAGE_TAGS = {
     messages.WARNING: 'alert-warning',
     messages.ERROR: 'alert-danger',
 }
+
+# Setup Celery
+CELERY_BROKER_URL = 'amqp://localhost'

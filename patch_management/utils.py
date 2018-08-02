@@ -2,6 +2,7 @@ import os
 import tempfile
 import json
 
+from django.contrib.auth.models import User
 from .models import System, Package
 from fabric import Connection
 from invoke import UnexpectedExit
@@ -34,7 +35,7 @@ def is_puppet_running(ssh_conn):
         ssh_conn.close()
         return False
 
-def ssh_run_get_system_info(ssh_conn, request_user):
+def ssh_run_get_system_info(ssh_conn, request_user_id):
     ssh_connected_systems   = ssh_conn.run('mco ping', hide=True)
     ssh_sys_info            = ssh_conn.run('mco shell run "(cat /etc/*-release && uname -msr) | sed \'/^\s*$/d\'"', hide=True)
     ssh_installed_packages  = ssh_conn.run('mco shell run "rpm -qa --qf \'%{NAME} %{VERSION}-%{RELEASE}\n\' || \
@@ -48,10 +49,12 @@ def ssh_run_get_system_info(ssh_conn, request_user):
     available_updates = process_ssh_res_available_updates(ssh_available_updates, connected_systems)
 
     # Create or update all data
-    save_system_information(connected_systems, request_user, sys_os_name, sys_os_ver, sys_kernel, installed_packages, available_updates)
+    save_system_information(connected_systems, request_user_id, sys_os_name, sys_os_ver, sys_kernel, installed_packages, available_updates)
 
 
-def save_system_information(connected_systems, request_user, sys_os_name, sys_os_ver, sys_kernel, installed_packages, available_updates):
+def save_system_information(connected_systems, request_user_id, sys_os_name, sys_os_ver, sys_kernel, installed_packages, available_updates):
+    request_user = User.objects.get(id=request_user_id)
+
     # Reset all connection states
     System.objects.filter(owner=request_user).update(connected = False)
 

@@ -13,6 +13,7 @@ from .decorators import ssh_setup_required
 from .models import System, SSHProfile, Package
 from .forms import SetupSSHForm, SSHPassphaseSubmitForm
 from .utils import connect_ssh, is_puppet_running, ssh_run_get_system_info, create_tmp_file, delete_tmp_file
+from .tasks import *
 
 def register(request):
     if request.method == 'POST':
@@ -52,16 +53,22 @@ def get_system_info(request):
         form = SSHPassphaseSubmitForm(request.POST)
         if form.is_valid():
             ssh_profile = request.user.sshprofile
-            is_connected, ssh_connection = connect_ssh(str(ssh_profile.ssh_server_address), 
-                                            str(ssh_profile.ssh_username),
-                                            str(ssh_profile.ssh_server_port),
-                                            str(ssh_profile.ssh_key),
-                                            str(form.cleaned_data['ssh_passphase']))
-            if is_connected:
-                ssh_run_get_system_info(ssh_connection, request.user) # will be changed to run in Celery
-                messages.success(request, 'Task initiated')
-            else:
-                messages.error(request, 'Cannot connect to your Puppet master server. Your server may unavailable or your SSH passphase may incorrect.')
+            celery_ssh_run_get_system_info.delay(str(ssh_profile.ssh_server_address), 
+                                    str(ssh_profile.ssh_username),
+                                    str(ssh_profile.ssh_server_port),
+                                    str(ssh_profile.ssh_key),
+                                    str(form.cleaned_data['ssh_passphase']), request.user.id)
+            messages.success(request, 'Task initiated')
+            # is_connected, ssh_connection = connect_ssh(str(ssh_profile.ssh_server_address), 
+            #                                 str(ssh_profile.ssh_username),
+            #                                 str(ssh_profile.ssh_server_port),
+            #                                 str(ssh_profile.ssh_key),
+            #                                 str(form.cleaned_data['ssh_passphase']))
+            # if is_connected:
+                # ssh_run_get_system_info(ssh_connection, request.user.id) # will be changed to run in Celery
+            #     messages.success(request, 'Task initiated')
+            # else:
+            #     messages.error(request, 'Cannot connect to your Puppet master server. Your server may unavailable or your SSH passphase may incorrect.')
         else:
             messages.error(request, 'Please input your SSH passphase first.')
     return redirect('home') 
