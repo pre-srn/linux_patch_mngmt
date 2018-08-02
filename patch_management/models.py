@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django_celery_results.models import TaskResult
 
 class SSHProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -48,3 +49,33 @@ class Package(models.Model):
 
     def __str__(self):
         return self.name + ' (' + self.current_version + ')'
+
+class Task(models.Model):
+    task_id = models.CharField(max_length=255, unique=True)
+    task_name = models.CharField(max_length=255)
+    started_at = models.DateTimeField(auto_now=True)
+    initiated_by = models.ForeignKey(User, related_name='tasks', on_delete=models.CASCADE)
+
+    def get_task_status(self):
+        try:
+            taskResult = TaskResult.objects.get(task_id=self.task_id)
+            return taskResult.status
+        except TaskResult.DoesNotExist:
+            return 'Running'
+
+    def get_task_result(self):
+        try:
+            taskResult = TaskResult.objects.get(task_id=self.task_id)
+            return taskResult.result
+        except TaskResult.DoesNotExist:
+            return '-'
+
+    def get_task_date_done(self):
+        try:
+            taskResult = TaskResult.objects.get(task_id=self.task_id)
+            return taskResult.date_done
+        except TaskResult.DoesNotExist:
+            return '-'
+
+    def __str__(self):
+        return self.task_id

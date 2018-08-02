@@ -34,5 +34,7 @@ urlpatterns = [
     # path('system/<int:system_id>/package/<int:package_id>/update', ),
     # path('system/<int:system_id>/package/<int:package_id>/uninstall', ),
     
+    path('task/', main_views.list_task, name='list_task'),
+
     path('admin/', admin.site.urls), # TODO remove this
 ]

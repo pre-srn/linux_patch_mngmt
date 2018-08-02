@@ -7,9 +7,10 @@
     <meta charset="utf-8">
     <title>Patch management</title>
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/open-iconic-bootstrap.min.css' %}">
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark justify-content-between">
-        <a class="navbar-brand" href="{% url 'home' %}">Linux Patch Management</a>
+        <a class="navbar-brand" href="{% url 'home' %}"><span class="oi oi-cog"></span> Linux Patch Management</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
             aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -21,7 +22,7 @@
                     <a class="nav-link" href="{% url 'home' %}">Patch Management</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Submitted Tasks</a>
+                    <a class="nav-link" href="{% url 'list_task' %}">Submitted Tasks</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'password_change' %}">Change password</a>

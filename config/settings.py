@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_results',
     'patch_management',
     'widget_tweaks',
 ]
@@ -145,3 +146,4 @@ MESSAGE_TAGS = {
 
 # Setup Celery
 CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_RESULT_BACKEND = 'django-db'

@@ -10,7 +10,7 @@ from django.db.models.functions import Lower
 
 from django.http import HttpResponse
 from .decorators import ssh_setup_required
-from .models import System, SSHProfile, Package
+from .models import System, SSHProfile, Package, Task
 from .forms import SetupSSHForm, SSHPassphaseSubmitForm
 from .utils import connect_ssh, is_puppet_running, ssh_run_get_system_info, create_tmp_file, delete_tmp_file
 from .tasks import *
@@ -44,7 +44,8 @@ def manage_system(request, system_id):
 @login_required
 @ssh_setup_required
 def list_task(request):
-    pass
+    tasks = Task.objects.all().order_by('started_at')
+    return render(request, 'task.html', {'tasks': tasks})
 
 @login_required
 @ssh_setup_required
@@ -53,11 +54,14 @@ def get_system_info(request):
         form = SSHPassphaseSubmitForm(request.POST)
         if form.is_valid():
             ssh_profile = request.user.sshprofile
-            celery_ssh_run_get_system_info.delay(str(ssh_profile.ssh_server_address), 
-                                    str(ssh_profile.ssh_username),
-                                    str(ssh_profile.ssh_server_port),
-                                    str(ssh_profile.ssh_key),
-                                    str(form.cleaned_data['ssh_passphase']), request.user.id)
+            # run an ssh task in Celery
+            celery_task_id = celery_ssh_run_get_system_info.delay(str(ssh_profile.ssh_server_address), 
+                                                                str(ssh_profile.ssh_username),
+                                                                str(ssh_profile.ssh_server_port),
+                                                                str(ssh_profile.ssh_key),
+                                                                str(form.cleaned_data['ssh_passphase']), 
+                                                                request.user.id)
+            Task.objects.create(task_id=celery_task_id, task_name="Get system information", initiated_by=request.user)
             messages.success(request, 'Task initiated')
             # is_connected, ssh_connection = connect_ssh(str(ssh_profile.ssh_server_address), 
             #                                 str(ssh_profile.ssh_username),

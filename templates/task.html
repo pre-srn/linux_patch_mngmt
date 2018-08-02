@@ -1,0 +1,28 @@
+{% extends 'base.html' %} 
+
+{% block content %}
+<table class="table">
+    <thead class="thead-inverse">
+        <tr>
+            <th>Task ID</th>
+            <th>Task Name</th>
+            <th>Started at</th>
+            <th>Task status</th>
+            <th>Task result</th>
+            <th>Done at</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for task in tasks %}
+        <tr>
+            <td>{{ task.task_id }}</td>
+            <td>{{ task.task_name }}</td>
+            <td>{{ task.started_at }}</td>
+            <td>{{ task.get_task_status }}</td>
+            <td>{{ task.get_task_result }}</td>
+            <td>{{ task.get_task_date_done }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}
