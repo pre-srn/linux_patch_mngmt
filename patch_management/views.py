@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.db.models.functions import Lower
+from django_celery_results.models import TaskResult
 
 from django.http import HttpResponse
 from .decorators import ssh_setup_required
@@ -44,8 +45,18 @@ def manage_system(request, system_id):
 @login_required
 @ssh_setup_required
 def list_task(request):
-    tasks = Task.objects.all().order_by('started_at')
+    tasks = Task.objects.filter(initiated_by=request.user).order_by('-started_at')
     return render(request, 'task.html', {'tasks': tasks})
+
+@login_required
+@ssh_setup_required
+def clear_task(request):
+    tasks = Task.objects.filter(initiated_by=request.user)
+    for task in tasks:
+        TaskResult.objects.filter(task_id=task.task_id).delete()
+    tasks.delete()
+    messages.success(request, 'All task results have been cleared.')
+    return redirect('list_task')
 
 @login_required
 @ssh_setup_required
@@ -63,16 +74,6 @@ def get_system_info(request):
                                                                 request.user.id)
             Task.objects.create(task_id=celery_task_id, task_name="Get system information", initiated_by=request.user)
             messages.success(request, 'Task initiated')
-            # is_connected, ssh_connection = connect_ssh(str(ssh_profile.ssh_server_address), 
-            #                                 str(ssh_profile.ssh_username),
-            #                                 str(ssh_profile.ssh_server_port),
-            #                                 str(ssh_profile.ssh_key),
-            #                                 str(form.cleaned_data['ssh_passphase']))
-            # if is_connected:
-                # ssh_run_get_system_info(ssh_connection, request.user.id) # will be changed to run in Celery
-            #     messages.success(request, 'Task initiated')
-            # else:
-            #     messages.error(request, 'Cannot connect to your Puppet master server. Your server may unavailable or your SSH passphase may incorrect.')
         else:
             messages.error(request, 'Please input your SSH passphase first.')
     return redirect('home') 
@@ -94,14 +95,13 @@ def setup_ssh(request):
                                                     str(form.cleaned_data['ssh_server_port']), 
                                                     tmp_ssh_key, 
                                                     str(form.cleaned_data['ssh_passphase']))
-                                 
             # Test connection
             if is_connected:
                 if (is_puppet_running(ssh_connection)):
                     messages.info(request, 'Successfully connected to your Puppet master server. \
                                             A task to get system information has been initiated.')
                     form.save()
-                    ssh_run_get_system_info(ssh_connection, request.user) # will be changed to run in Celery
+                    ssh_run_get_system_info(ssh_connection, request.user)
                     if 'ssh_key' in request.FILES: delete_tmp_file(tmp_ssh_key)
                     return redirect('home')
                 else:

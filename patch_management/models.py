@@ -1,3 +1,4 @@
+import ast
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -66,7 +67,11 @@ class Task(models.Model):
     def get_task_result(self):
         try:
             taskResult = TaskResult.objects.get(task_id=self.task_id)
-            return taskResult.result
+            if taskResult.result == 'null':
+                return '-'
+            else:
+                result = ast.literal_eval(taskResult.result)
+                return result['exc_message'][0]
         except TaskResult.DoesNotExist:
             return '-'
 
