@@ -28,11 +28,11 @@ urlpatterns = [
     path('account/config/password/', auth_views.PasswordChangeView.as_view(template_name='account/config_password.html'), name='password_change'),
     path('account/config/password/done/', main_views.config_password_done, name='password_change_done'),
 
-    path('system/get/info/', main_views.get_system_info, name='get_system_info'),
     # path('system/scan/cve/', main_views.get_system_info, name='get_system_info'),
     path('system/<int:system_id>/', main_views.manage_system, name='manage_system'),
-    # path('system/<int:system_id>/package/<int:package_id>/update', ),
-    # path('system/<int:system_id>/package/<int:package_id>/uninstall', ),
+
+    path('system/get/info/', main_views.get_system_info, name='get_system_info'),
+    path('package/update/', main_views.update_package, name='update_package'),
     
     path('task/', main_views.list_task, name='list_task'),
     path('task/clear/', main_views.clear_task, name='clear_task'),

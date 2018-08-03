@@ -8,6 +8,8 @@
     <title>Patch management</title>
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/open-iconic-bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/toastr.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/override.css' %}" />
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark justify-content-between">
         <a class="navbar-brand" href="{% url 'home' %}"><span class="oi oi-cog"></span> Linux Patch Management</a>
@@ -47,9 +49,17 @@
 </head>
 
 <body>
-    <div class="container">
-        {% include 'includes/messages.html' %} {% block content %} {% endblock %}
-        <script src="{% static 'js/jquery-3.3.1.min.js' %}"></script>
-        <script src="{% static 'js/bootstrap.min.js' %}"></script>
+    <div id="main-wrapper" class="container">
+        {% include 'includes/messages.html' %} 
+        {% block content %} {% endblock %}
     </div>
+    <script src="{% static 'js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'js/toastr.min.js' %}"></script>
+    <script>
+        toastr.options.escapeHtml = true;
+        toastr.options.closeButton = true;
+        toastr.options.positionClass = "toast-bottom-right";
+    </script>
+    {% block javascript %}{% endblock %}
 </body>

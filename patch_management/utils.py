@@ -25,6 +25,7 @@ def connect_ssh(ssh_addr, ssh_user, ssh_port, ssh_key, ssh_passphrase):
         del conn
         return False, None
 
+
 def is_puppet_running(ssh_conn):
     try:
         ssh_conn.run('puppet --version', hide=True)
@@ -34,22 +35,6 @@ def is_puppet_running(ssh_conn):
     except UnexpectedExit:
         ssh_conn.close()
         return False
-
-def ssh_run_get_system_info(ssh_conn, request_user_id):
-    ssh_connected_systems   = ssh_conn.run('mco ping', hide=True)
-    ssh_sys_info            = ssh_conn.run('mco shell run "(cat /etc/*-release && uname -msr) | sed \'/^\s*$/d\'"', hide=True)
-    ssh_installed_packages  = ssh_conn.run('mco shell run "rpm -qa --qf \'%{NAME} %{VERSION}-%{RELEASE}\n\' || \
-                                            dpkg-query -W -f=\'\${Package} \${Version}\n\'"', hide=True)
-    ssh_available_updates   = ssh_conn.run('mco rpc package checkupdates', pty=True, hide=True)
-    ssh_conn.close()
-
-    connected_systems = process_ssh_res_connected_systems(ssh_connected_systems)
-    sys_os_name, sys_os_ver, sys_kernel = process_ssh_res_sys_info(ssh_sys_info, connected_systems)
-    installed_packages = process_ssh_res_installed_packages(ssh_installed_packages, connected_systems)
-    available_updates = process_ssh_res_available_updates(ssh_available_updates, connected_systems)
-
-    # Create or update all data
-    save_system_information(connected_systems, request_user_id, sys_os_name, sys_os_ver, sys_kernel, installed_packages, available_updates)
 
 
 def save_system_information(connected_systems, request_user_id, sys_os_name, sys_os_ver, sys_kernel, installed_packages, available_updates):
@@ -161,12 +146,35 @@ def process_ssh_res_available_updates(ssh_available_updates, connected_systems):
                                                             .replace(' ','')
             available_update_json_array = json.loads(available_update_result)
             for update_info in available_update_json_array:
-                package_name = update_info['package'].split('.', 1)[0] # remove arch info
+                package_name = update_info['package']
                 package_version = update_info['version']
                 available_update_info.append([package_name, package_version])
             available_updates[cur_connected_system] = available_update_info
     return available_updates
 
+
+def get_update_package_result(ssh_update_package):
+    package_version = ''
+    ssh_update_package_lines = iter(ssh_update_package.stdout.split('\n'))
+    for line in ssh_update_package_lines:
+        line = line.strip()
+        if 'Summary of Ensure:' in line:
+            while True:
+                package_version_line = next(ssh_update_package_lines).strip()
+                if (len(package_version_line) > 0):
+                    package_version = package_version_line.split(' ', 1)[0]
+                    break
+    return package_version
+
+
+def is_package_updated(package_id, expected_version):
+    package = Package.objects.get(pk=package_id)
+    return package.new_version == expected_version
+
+
+def save_package_update_result(package_id, updated_version):
+    Package.objects.filter(pk=package_id).update(current_version=updated_version, new_version = None)
+    
 
 def create_tmp_file(input_file):
     tmp_name = next(tempfile._get_candidate_names()) + '.tmp'

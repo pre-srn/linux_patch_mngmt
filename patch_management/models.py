@@ -36,7 +36,7 @@ class System(models.Model):
         return self.hostname
 
     def get_available_updates_count(self):
-        return Package.objects.filter(system=self, new_version__isnull=False).count()
+        return Package.objects.filter(system=self, active=True, new_version__isnull=False).count()
 
 class Package(models.Model):
     name = models.CharField(max_length=255)
@@ -62,7 +62,7 @@ class Task(models.Model):
             taskResult = TaskResult.objects.get(task_id=self.task_id)
             return taskResult.status
         except TaskResult.DoesNotExist:
-            return 'Running'
+            return 'RUNNING'
 
     def get_task_result(self):
         try:

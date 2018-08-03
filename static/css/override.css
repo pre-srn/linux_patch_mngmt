@@ -1,0 +1,11 @@
+#main-wrapper {
+    margin-top: 30px;
+}
+
+/* Override toast icons */
+#toast-container > div {
+    padding: 15px 15px 15px 15px !important;
+}
+#toast-container > .toast {
+    background-image: none !important;
+}

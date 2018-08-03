@@ -24,7 +24,7 @@
             </td>
             <td class="align-middle">{{ system.system_os_name }}</td>
             <td class="align-middle">{{ system.get_available_updates_count}} Updates available</td>
-            <td><a href="{% url 'manage_system' system.id %}">Manage</a></td>
+            <td><a href="{% url 'manage_system' system.id %}" class="btn btn-dark">Manage</a></td>
         </tr>
         {% endfor %}
     </tbody>

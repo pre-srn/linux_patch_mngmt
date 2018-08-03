@@ -1,6 +1,34 @@
 {% extends 'base.html' %} 
 
+{% block javascript %}
+  <script>
+    $(".btn-update").click(function () {
+        $.ajax({
+            type: 'post',
+            url: '{% url "update_package" %}',
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                system_id: '{{ system_id }}',
+                package_id: this.id.substr(this.id.indexOf('-') + 1),
+                ssh_passphase: $('#id_ssh_passphase').val()
+            },
+            dataType: 'json',
+            success: function (data) {
+                if (data.error) {
+                    toastr.error(data.message);
+                }
+                else {
+                    toastr.success(data.message);
+                }
+            }
+        });
+    });
+  </script>
+{% endblock %}
+
 {% block content %}
+{% include "includes/inline_form.html" %}
+
 <table class="table">
     <thead class="thead-inverse">
         <tr>
@@ -16,12 +44,14 @@
             <td>{{ package.name }}</td>
             <td>{{ package.current_version }}</td>
             <td>{{ package.new_version }}</td>
-            <td><a href="#">Update</a></td>
+            <td><button id='package-{{ package.id }}' type="button" class="btn btn-primary btn-update">Update</button></td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+
 <br><br>
+
 <table class="table">
     <thead class="thead-inverse">
         <tr>

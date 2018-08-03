@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 
+from django.http import HttpResponse, JsonResponse
 from django.urls import resolve
 from django.contrib import messages
 from django.contrib.auth import login as auth_login
@@ -9,11 +10,10 @@ from django.contrib.auth.decorators import login_required
 from django.db.models.functions import Lower
 from django_celery_results.models import TaskResult
 
-from django.http import HttpResponse
 from .decorators import ssh_setup_required
 from .models import System, SSHProfile, Package, Task
-from .forms import SetupSSHForm, SSHPassphaseSubmitForm
-from .utils import connect_ssh, is_puppet_running, ssh_run_get_system_info, create_tmp_file, delete_tmp_file
+from .forms import SetupSSHForm, SSHPassphaseSubmitForm, UpdatePackageAjaxSubmitForm
+from .utils import connect_ssh, is_puppet_running, create_tmp_file, delete_tmp_file
 from .tasks import *
 
 def register(request):
@@ -37,10 +37,41 @@ def home(request):
 @login_required
 @ssh_setup_required
 def manage_system(request, system_id):
-    system = get_object_or_404(System, pk=system_id)
+    form = SSHPassphaseSubmitForm()
+    system = get_object_or_404(System.objects.filter(owner=request.user), pk=system_id)
     installed_packages = system.packages.filter(active=True).order_by(Lower('name'))
     outdated_packages = installed_packages.filter(new_version__isnull=False).order_by(Lower('name'))
-    return render(request, 'system.html', {'installed_packages': installed_packages, 'outdated_packages': outdated_packages})
+    return render(request, 'system.html', {'form': form, 'installed_packages': installed_packages, 'outdated_packages': outdated_packages, 'system_id': system_id})
+
+@login_required
+@ssh_setup_required
+def update_package(request):
+    if request.method == 'POST':
+        form = UpdatePackageAjaxSubmitForm(request.POST)
+        data = {}
+        if form.is_valid():
+            system_id = int(form.cleaned_data['system_id'])
+            package_id = int(form.cleaned_data['package_id'])
+            system = get_object_or_404(System.objects.filter(owner=request.user), pk=system_id)
+            package = get_object_or_404(system.packages, pk=package_id)
+            ssh_profile = request.user.sshprofile
+            celery_task_id = celery_ssh_run_update_package.delay(str(ssh_profile.ssh_server_address), 
+                                                                str(ssh_profile.ssh_username),
+                                                                str(ssh_profile.ssh_server_port),
+                                                                str(ssh_profile.ssh_key),
+                                                                str(form.cleaned_data['ssh_passphase']),
+                                                                package_id,
+                                                                package.name,
+                                                                system.hostname)
+            Task.objects.create(task_id=celery_task_id, task_name='Update ' + package.name + ' on ' + system.hostname, initiated_by=request.user)
+            data['error'] = False
+            data['message'] = 'Task initiated'
+        else:
+            data['error'] = True
+            data['message'] = 'Please input your SSH passphase first.'
+        return JsonResponse(data)
+    else:
+        return redirect('home')
 
 @login_required
 @ssh_setup_required
@@ -83,13 +114,10 @@ def setup_ssh(request):
     if request.method == 'POST':
         form = SetupSSHForm(request.POST, request.FILES, instance=request.user.sshprofile)
         if form.is_valid():
-
             if 'ssh_key' in request.FILES:
                 tmp_ssh_key = create_tmp_file(request.FILES['ssh_key'])
             else:
-                # In case the file already exists on the server
-                tmp_ssh_key = str(form.instance.ssh_key)
-
+                tmp_ssh_key = str(form.instance.ssh_key) # In case the file already exists on the server
             is_connected, ssh_connection = connect_ssh(str(form.cleaned_data['ssh_server_address']), 
                                                     str(form.cleaned_data['ssh_username']), 
                                                     str(form.cleaned_data['ssh_server_port']), 
