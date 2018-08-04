@@ -115,7 +115,8 @@ def process_ssh_res_installed_packages(ssh_installed_packages, connected_systems
                 package_info = package_line.split(' ', 2)
                 package_name = package_info[0]
                 package_version = package_info[1]
-                install_package_info.append([package_name, package_version])
+                if not package_name.startswith('gpg-pubkey'):
+                    install_package_info.append([package_name, package_version])
             installed_packages[cur_connected_system] = install_package_info
     return installed_packages
 
@@ -148,33 +149,42 @@ def process_ssh_res_available_updates(ssh_available_updates, connected_systems):
             for update_info in available_update_json_array:
                 package_name = update_info['package']
                 package_version = update_info['version']
-                available_update_info.append([package_name, package_version])
+                if not package_name.startswith('gpg-pubkey'):
+                    available_update_info.append([package_name, package_version])
             available_updates[cur_connected_system] = available_update_info
     return available_updates
 
 
-def get_update_package_result(ssh_update_package):
-    package_version = ''
-    ssh_update_package_lines = iter(ssh_update_package.stdout.split('\n'))
-    for line in ssh_update_package_lines:
-        line = line.strip()
-        if 'Summary of Ensure:' in line:
-            while True:
-                package_version_line = next(ssh_update_package_lines).strip()
-                if (len(package_version_line) > 0):
-                    package_version = package_version_line.split(' ', 1)[0]
-                    break
-    return package_version
+def get_package_update_list(system_id):
+    cur_system = System.objects.get(pk=system_id)
+    packages = Package.objects.filter(system=cur_system, active=True, new_version__isnull=False)
+    return packages
 
 
-def is_package_updated(package_id, expected_version):
-    package = Package.objects.get(pk=package_id)
-    return package.new_version == expected_version
+def check_package_update_result(package_name, available_updates):
+    updated = True
+    for available_update in available_updates:
+        if package_name == available_update[0]:
+            updated = False
+            break
+    return updated
 
 
-def save_package_update_result(package_id, updated_version):
-    Package.objects.filter(pk=package_id).update(current_version=updated_version, new_version = None)
-    
+def save_package_update_result(system_id, installed_packages, available_updates):
+    cur_system = System.objects.get(pk=system_id)
+    cur_system.packages.all().update(active = False)
+
+    for info in installed_packages:
+        package_name = info[0]
+        package_version = info[1]
+        Package.objects.update_or_create(name = package_name, system = cur_system,
+            defaults = {'active': True, 'current_version': package_version, 'new_version': None})
+
+    for info in available_updates:
+        package_name = info[0]
+        package_version = info[1]
+        Package.objects.filter(name = package_name, system = cur_system).update(new_version = package_version)
+
 
 def create_tmp_file(input_file):
     tmp_name = next(tempfile._get_candidate_names()) + '.tmp'

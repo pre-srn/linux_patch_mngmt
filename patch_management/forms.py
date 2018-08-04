@@ -30,6 +30,10 @@ class SSHPassphaseSubmitForm(forms.Form):
                     required=True, 
                     help_text="Please enter your SSH passphase here. Note that this value will NOT be saved anywhere.")
 
+class UpdateAllPackagesAjaxSubmitForm(forms.Form):
+    system_id = forms.CharField(required=True)
+    ssh_passphase = forms.CharField(widget=forms.PasswordInput, required=True)
+
 class UpdatePackageAjaxSubmitForm(forms.Form):
     system_id = forms.CharField(required=True)
     package_id = forms.CharField(required=True)

@@ -55,6 +55,7 @@ class Task(models.Model):
     task_id = models.CharField(max_length=255, unique=True)
     task_name = models.CharField(max_length=255)
     started_at = models.DateTimeField(auto_now=True)
+    is_notified = models.BooleanField(default=False)
     initiated_by = models.ForeignKey(User, related_name='tasks', on_delete=models.CASCADE)
 
     def get_task_status(self):

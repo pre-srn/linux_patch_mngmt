@@ -1,18 +1,3 @@
-"""linux_patch_management_project URL Configuration
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/2.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path
 from django.contrib.auth import views as auth_views
@@ -34,10 +19,13 @@ urlpatterns = [
     path('task/', main_views.list_task, name='list_task'),
     path('task/clear/', main_views.clear_task, name='clear_task'),
 
+    # Ajax request URLs
     path('ajax/system/info/', main_views.ajax_get_system_info, name='get_system_info'),
     path('ajax/package/update/', main_views.ajax_update_package, name='update_package'),
+    path('ajax/all/packages/update/', main_views.ajax_update_all_packages, name='update_all_packages'),
     path('ajax/installed/packages/', main_views.ajax_get_installed_packages_table, name='get_installed_packages_table'),
     path('ajax/outdated/packages/', main_views.ajax_get_outdated_packages_table, name='get_outdated_packages_table'),
+    path('ajax/task/status/', main_views.ajax_check_task_status, name='check_task_status'),
 
     path('admin/', admin.site.urls), # TODO remove this
 ]

@@ -4,7 +4,10 @@
 {% include "includes/inline_form.html" %}
 
 <button type="button" class="btn btn-dark" data-toggle="modal" data-target="#installedPackagesModel">View installed packages</button>
-<button type="button" class="btn btn-success">Update all packages</button>
+<button type="button" class="btn btn-success" data-toggle="modal" data-target="#updateAllPackagesModal" 
+    data-package-id="{{ package.id }}" data-package-name="{{ package.name }}">
+    Update all packages
+</button>
 <button type="button" class="btn btn-success" id="test">Refresh</button>
 
 <table class="table">
@@ -72,10 +75,31 @@
             </div>
             <div class="modal-footer">
                 <p>
-                    <small>Note that related packages may automatically get updated at the same time. System infomation may need to be refreshed.</small>
+                    <small>Note that related packages may automatically get updated at the same time.</small>
                 </p>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
                 <button type="button" class="btn btn-primary" id="btn-update-package">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update all packages confirmation modal -->
+<div class="modal fade" id="updateAllPackagesModal" tabindex="-1" role="dialog" aria-labelledby="updateAllPackagesModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updateAllPackagesModalLabel">Updating all packages</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Do you really want to update <strong>all packages</strong> on {{ system_hostname }}?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                <button type="button" class="btn btn-primary" id="btn-update-all-packages">Yes</button>
             </div>
         </div>
     </div>
@@ -90,9 +114,9 @@
         var package_name = button.data('package-name');
         var modal = $(this);
         modal.find('#span-update-package-name').text(package_name);
-        modal.find('#btn-update-package').data('id', package_id);
+        modal.find('#btn-update-package').data('package-id', package_id);
     });
-
+    
     $("#btn-update-package").click(function () {
         $.ajax({
             type: 'post',
@@ -105,15 +129,29 @@
             },
             dataType: 'json',
             success: function(response) {
-                if (response.error) {
-                    toastr.error(response.message);
-                }
-                else {
-                    toastr.success(response.message + "<p><small>[" + response.task_id + "]</small></p>");
-                }
+                if (response.error) toastr.error(response.message);
+                else toastr.success(response.message + "<p><small>[" + response.task_id + "]</small></p>");
             }
         });
         $('#updatePackageModal').modal('hide')
+    });
+
+    $("#btn-update-all-packages").click(function () {
+        $.ajax({
+            type: 'post',
+            url: '{% url "update_all_packages" %}',
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                system_id: '{{ system_id }}',
+                ssh_passphase: $('#id_ssh_passphase').val()
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.error) toastr.error(response.message);
+                else toastr.success(response.message + "<p><small>[" + response.task_id + "]</small></p>");
+            }
+        });
+        $('#updateAllPackagesModal').modal('hide')
     });
 
     $("#test").click(function () {
