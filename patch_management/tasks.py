@@ -14,7 +14,7 @@ def celery_ssh_run_get_system_info(ssh_addr, ssh_user, ssh_port, ssh_key, ssh_pa
             ssh_available_updates   = ssh_conn.run('mco rpc package checkupdates', pty=True, hide=True)
             ssh_conn.close()
         except Exception:
-            raise ConnectionError('Network connection error.')
+            raise ConnectionError('Network connection / command error.')
 
         # Getting STDOUT from each SSH command and converting them to Python data structure
         connected_systems = process_ssh_res_connected_systems(ssh_connected_systems)
@@ -40,7 +40,7 @@ def celery_ssh_run_update_package(ssh_addr, ssh_user, ssh_port, ssh_key, ssh_pas
             ssh_available_updates  = ssh_conn.run('mco rpc package checkupdates -I {0}'.format(system_hostname), pty=True, hide=True)
             ssh_conn.close()
         except Exception:
-            raise ConnectionError('Network connection error.')
+            raise ConnectionError('Network connection / command error')
         
         installed_packages = process_ssh_res_installed_packages(ssh_installed_packages, [system_hostname])
         available_updates = process_ssh_res_available_updates(ssh_available_updates, [system_hostname])
@@ -71,7 +71,7 @@ def celery_ssh_run_update_all_packages(ssh_addr, ssh_user, ssh_port, ssh_key, ss
             ssh_available_updates  = ssh_conn.run('mco rpc package checkupdates -I {0}'.format(system_hostname), pty=True, hide=False)
             ssh_conn.close()
         except Exception:
-            raise ConnectionError('Network connection error.')
+            raise ConnectionError('Network connection / command error.')
         
         installed_packages = process_ssh_res_installed_packages(ssh_installed_packages, [system_hostname])
         available_updates = process_ssh_res_available_updates(ssh_available_updates, [system_hostname])

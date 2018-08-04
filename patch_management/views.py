@@ -171,11 +171,12 @@ def ajax_check_task_status(request):
     tasks = Task.objects.filter(initiated_by=request.user, is_notified=False)
     response['notified_tasks'] = []
     for task in tasks:
-        if (task.get_task_status() != 'RUNNING'):
-            task = {'id': task.task_id, 'name': task.task_name}
-            # task.is_notified = True
-            # task.save()
-            response['notified_tasks'].append(task)
+        task_status = task.get_task_status()
+        if (task_status != 'RUNNING'):
+            notified_task = {'task_id': task.task_id, 'task_name': task.task_name, 'task_status': task_status}
+            task.is_notified = True
+            task.save()
+            response['notified_tasks'].append(notified_task)
     return JsonResponse(response)
 
 

@@ -6,11 +6,11 @@
     <thead class="thead-inverse">
         <tr>
             <th>ID</th>
-            <th>Name</th>
+            <th>Task</th>
             <th>Started at</th>
             <th>Status</th>
             <th>Message</th>
-            <th>Done at</th>
+            <th>Finished at</th>
         </tr>
     </thead>
     <tbody>
@@ -18,10 +18,10 @@
         <tr>
             <td>{{ task.task_id }}</td>
             <td>{{ task.task_name }}</td>
-            <td>{{ task.started_at }}</td>
+            <td>{{ task.started_at|date:'d/m/Y H:i:s' }}</td>
             <td>{{ task.get_task_status }}</td>
             <td>{{ task.get_task_result }}</td>
-            <td>{{ task.get_task_date_done }}</td>
+            <td>{{ task.get_task_date_done|date:'d/m/Y H:i:s' }}</td>
         </tr>
         {% endfor %}
     </tbody>

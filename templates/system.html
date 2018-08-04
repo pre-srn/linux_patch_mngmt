@@ -3,12 +3,12 @@
 {% block content %} 
 {% include "includes/inline_form.html" %}
 
+<button type="button" class="btn btn-info" id="btn-get-system-info">Get/Re-check system information</button>
 <button type="button" class="btn btn-dark" data-toggle="modal" data-target="#installedPackagesModel">View installed packages</button>
 <button type="button" class="btn btn-success" data-toggle="modal" data-target="#updateAllPackagesModal" 
     data-package-id="{{ package.id }}" data-package-name="{{ package.name }}">
     Update all packages
 </button>
-<button type="button" class="btn btn-success" id="test">Refresh</button>
 
 <table class="table">
     <thead class="thead-inverse">
@@ -116,6 +116,22 @@
         modal.find('#span-update-package-name').text(package_name);
         modal.find('#btn-update-package').data('package-id', package_id);
     });
+
+    $("#btn-get-system-info").click(function () {
+        $.ajax({
+            type: 'post',
+            url: '{% url "get_system_info" %}',
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                ssh_passphase: $('#id_ssh_passphase').val()
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.error) toastr.error(response.message);
+                else toastr.success(response.message + "<p><small>[" + response.task_id + "]</small></p>");
+            }
+        });
+    });
     
     $("#btn-update-package").click(function () {
         $.ajax({
@@ -154,7 +170,7 @@
         $('#updateAllPackagesModal').modal('hide')
     });
 
-    $("#test").click(function () {
+    function refresh_page() {
         $.ajax({
             url: '{% url "get_outdated_packages_table" %}',
             data: {
@@ -173,6 +189,6 @@
                 $("#installed_packages_table_body").html(response);
             }
         });
-    });
+    }
 </script>
 {% endblock %}
