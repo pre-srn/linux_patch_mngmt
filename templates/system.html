@@ -1,71 +1,140 @@
 {% extends 'base.html' %} 
 
-{% block javascript %}
-  <script>
-    $(".btn-update").click(function () {
-        $.ajax({
-            type: 'post',
-            url: '{% url "update_package" %}',
-            data: {
-                csrfmiddlewaretoken: '{{ csrf_token }}',
-                system_id: '{{ system_id }}',
-                package_id: this.id.substr(this.id.indexOf('-') + 1),
-                ssh_passphase: $('#id_ssh_passphase').val()
-            },
-            dataType: 'json',
-            success: function (data) {
-                if (data.error) {
-                    toastr.error(data.message);
-                }
-                else {
-                    toastr.success(data.message);
-                }
-            }
-        });
-    });
-  </script>
-{% endblock %}
-
-{% block content %}
+{% block content %} 
 {% include "includes/inline_form.html" %}
+
+<button type="button" class="btn btn-dark" data-toggle="modal" data-target="#installedPackagesModel">View installed packages</button>
+<button type="button" class="btn btn-success">Update all packages</button>
+<button type="button" class="btn btn-success" id="test">Refresh</button>
 
 <table class="table">
     <thead class="thead-inverse">
         <tr>
+            <th>#</th>
             <th>Package name</th>
             <th>Current Version</th>
             <th>New Version</th>
             <th></th>
         </tr>
     </thead>
-    <tbody>
-        {% for package in outdated_packages %}
-        <tr>
-            <td>{{ package.name }}</td>
-            <td>{{ package.current_version }}</td>
-            <td>{{ package.new_version }}</td>
-            <td><button id='package-{{ package.id }}' type="button" class="btn btn-primary btn-update">Update</button></td>
-        </tr>
-        {% endfor %}
+    <tbody id="outdated_packages_table_body">
+        {% include "ajax_templates/outdated_packages_table.html" %}
     </tbody>
 </table>
 
-<br><br>
+<!-- Installed packages modal -->
+<div class="modal fade" id="installedPackagesModel" tabindex="-1" role="dialog" aria-labelledby="installedPackagesModelTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="installedPackagesModelTitle">Installed packages</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <thead class="thead-inverse">
+                        <tr>
+                            <th>#</th>
+                            <th>Package name</th>
+                            <th>Current Version</th>
+                        </tr>
+                    </thead>
+                    <tbody id="installed_packages_table_body">
+                        {% include "ajax_templates/installed_packages_table.html" %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-<table class="table">
-    <thead class="thead-inverse">
-        <tr>
-            <th>Package name</th>
-            <th>Current Version</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for package in installed_packages %}
-        <tr>
-            <td>{{ package.name }}</td>
-            <td>{{ package.current_version }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endblock content %}
+<!-- Update package confirmation modal -->
+<div class="modal fade" id="updatePackageModal" tabindex="-1" role="dialog" aria-labelledby="updatePackageModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updatePackageModalLabel">Updating a package</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Do you really want to update
+                    <strong>
+                        <span id="span-update-package-name"></span>
+                    </strong>?
+                </p>
+            </div>
+            <div class="modal-footer">
+                <p>
+                    <small>Note that related packages may automatically get updated at the same time. System infomation may need to be refreshed.</small>
+                </p>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                <button type="button" class="btn btn-primary" id="btn-update-package">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %} 
+
+{% block javascript %}
+<script>
+    $('#updatePackageModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var package_id = button.data('package-id');
+        var package_name = button.data('package-name');
+        var modal = $(this);
+        modal.find('#span-update-package-name').text(package_name);
+        modal.find('#btn-update-package').data('id', package_id);
+    });
+
+    $("#btn-update-package").click(function () {
+        $.ajax({
+            type: 'post',
+            url: '{% url "update_package" %}',
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                system_id: '{{ system_id }}',
+                package_id: $(this).data('package-id'),
+                ssh_passphase: $('#id_ssh_passphase').val()
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.error) {
+                    toastr.error(response.message);
+                }
+                else {
+                    toastr.success(response.message + "<p><small>[" + response.task_id + "]</small></p>");
+                }
+            }
+        });
+        $('#updatePackageModal').modal('hide')
+    });
+
+    $("#test").click(function () {
+        $.ajax({
+            url: '{% url "get_outdated_packages_table" %}',
+            data: {
+                system_id: '{{ system_id }}'
+            },
+            success: function(response) {
+                $("#outdated_packages_table_body").html(response);
+            }
+        });
+        $.ajax({
+            url: '{% url "get_installed_packages_table" %}',
+            data: {
+                system_id: '{{ system_id }}'
+            },
+            success: function(response) {
+                $("#installed_packages_table_body").html(response);
+            }
+        });
+    });
+</script>
+{% endblock %}

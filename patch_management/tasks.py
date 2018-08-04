@@ -39,6 +39,7 @@ def celery_ssh_run_update_package(ssh_addr, ssh_user, ssh_port, ssh_key, ssh_pas
         except Exception:
             raise ConnectionError('Network connection error.')
         
+        # Checking the update result
         package_version = get_update_package_result(update_result)
         if (is_package_updated(package_id, package_version)):
             save_package_update_result(package_id, package_version)

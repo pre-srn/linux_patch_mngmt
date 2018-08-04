@@ -1,11 +1,8 @@
 {% extends 'base.html' %} 
 
 {% block content %}
-<form method="post" action="{% url 'get_system_info' %}" novalidate>
-    {% csrf_token %}
-    {% include "includes/inline_form.html" %}
-    <button type="submit" class="btn btn-info">Get/Re-check system information</button>
-</form>
+{% include "includes/inline_form.html" %}
+<button type="button" class="btn btn-info" id="btn-get-system-info">Get/Re-check system information</button>
 
 <table class="table">
     <thead class="thead-inverse">
@@ -23,10 +20,34 @@
                 {{ system.hostname }}
             </td>
             <td class="align-middle">{{ system.system_os_name }}</td>
-            <td class="align-middle">{{ system.get_available_updates_count}} Updates available</td>
+            <td class="align-middle">{{ system.get_available_updates_count}} Update{{ system.get_available_updates_count|pluralize }} available</td>
             <td><a href="{% url 'manage_system' system.id %}" class="btn btn-dark">Manage</a></td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 {% endblock content %}
+
+{% block javascript %}
+<script>
+    $("#btn-get-system-info").click(function () {
+        $.ajax({
+            type: 'post',
+            url: '{% url "get_system_info" %}',
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                ssh_passphase: $('#id_ssh_passphase').val()
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.error) {
+                    toastr.error(response.message);
+                }
+                else {
+                    toastr.success(response.message + "<p><small>[" + response.task_id + "]</small></p>");
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

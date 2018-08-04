@@ -1,5 +1,9 @@
 #main-wrapper {
-    margin-top: 30px;
+    margin-top: 30px !important;
+    margin-bottom: 100px !important;
+}
+.modal-lg {
+    max-width: 50% !important;
 }
 
 /* Override toast icons */

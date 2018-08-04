@@ -41,14 +41,60 @@ def manage_system(request, system_id):
     system = get_object_or_404(System.objects.filter(owner=request.user), pk=system_id)
     installed_packages = system.packages.filter(active=True).order_by(Lower('name'))
     outdated_packages = installed_packages.filter(new_version__isnull=False).order_by(Lower('name'))
-    return render(request, 'system.html', {'form': form, 'installed_packages': installed_packages, 'outdated_packages': outdated_packages, 'system_id': system_id})
+    return render(request, 'system.html', 
+        {'form': form, 'installed_packages': installed_packages, 'outdated_packages': outdated_packages, 'system_id': system_id})
+
 
 @login_required
 @ssh_setup_required
-def update_package(request):
+def ajax_get_system_info(request):
+    if request.method == 'POST':
+        form = SSHPassphaseSubmitForm(request.POST)
+        response = {}
+        if form.is_valid():
+            ssh_profile = request.user.sshprofile
+            celery_task_id = celery_ssh_run_get_system_info.delay(str(ssh_profile.ssh_server_address), 
+                                                                str(ssh_profile.ssh_username),
+                                                                str(ssh_profile.ssh_server_port),
+                                                                str(ssh_profile.ssh_key),
+                                                                str(form.cleaned_data['ssh_passphase']), 
+                                                                request.user.id)
+            Task.objects.create(task_id=celery_task_id, task_name="Get system information", initiated_by=request.user)
+            response['error'] = False
+            response['message'] = 'Task initiated'
+            response['task_id'] = str(celery_task_id)
+        else:
+            response['error'] = True
+            response['message'] = 'Please input your SSH passphase first.'
+        return JsonResponse(response)
+    else:
+        return redirect('home') 
+
+
+@login_required
+@ssh_setup_required
+def ajax_get_installed_packages_table(request):
+    system_id = int(request.GET.get('system_id', None))
+    system = get_object_or_404(System.objects.filter(owner=request.user), pk=system_id)
+    installed_packages = system.packages.filter(active=True).order_by(Lower('name'))
+    return render(request, 'ajax_templates/installed_packages_table.html', {'installed_packages': installed_packages})
+
+
+@login_required
+@ssh_setup_required
+def ajax_get_outdated_packages_table(request):
+    system_id = int(request.GET.get('system_id', None))
+    system = get_object_or_404(System.objects.filter(owner=request.user), pk=system_id)
+    outdated_packages = system.packages.filter(active=True, new_version__isnull=False).order_by(Lower('name'))
+    return render(request, 'ajax_templates/outdated_packages_table.html', {'outdated_packages': outdated_packages})
+
+
+@login_required
+@ssh_setup_required
+def ajax_update_package(request):
     if request.method == 'POST':
         form = UpdatePackageAjaxSubmitForm(request.POST)
-        data = {}
+        response = {}
         if form.is_valid():
             system_id = int(form.cleaned_data['system_id'])
             package_id = int(form.cleaned_data['package_id'])
@@ -63,13 +109,16 @@ def update_package(request):
                                                                 package_id,
                                                                 package.name,
                                                                 system.hostname)
-            Task.objects.create(task_id=celery_task_id, task_name='Update ' + package.name + ' on ' + system.hostname, initiated_by=request.user)
-            data['error'] = False
-            data['message'] = 'Task initiated'
+            Task.objects.create(task_id=celery_task_id, 
+                                task_name='Update ' + package.name + ' on ' + system.hostname, 
+                                initiated_by=request.user)
+            response['error'] = False
+            response['message'] = 'Task initiated'
+            response['task_id'] = str(celery_task_id)
         else:
-            data['error'] = True
-            data['message'] = 'Please input your SSH passphase first.'
-        return JsonResponse(data)
+            response['error'] = True
+            response['message'] = 'Please input your SSH passphase first.'
+        return JsonResponse(response)
     else:
         return redirect('home')
 
@@ -89,25 +138,6 @@ def clear_task(request):
     messages.success(request, 'All task results have been cleared.')
     return redirect('list_task')
 
-@login_required
-@ssh_setup_required
-def get_system_info(request):
-    if request.method == 'POST':
-        form = SSHPassphaseSubmitForm(request.POST)
-        if form.is_valid():
-            ssh_profile = request.user.sshprofile
-            # run an ssh task in Celery
-            celery_task_id = celery_ssh_run_get_system_info.delay(str(ssh_profile.ssh_server_address), 
-                                                                str(ssh_profile.ssh_username),
-                                                                str(ssh_profile.ssh_server_port),
-                                                                str(ssh_profile.ssh_key),
-                                                                str(form.cleaned_data['ssh_passphase']), 
-                                                                request.user.id)
-            Task.objects.create(task_id=celery_task_id, task_name="Get system information", initiated_by=request.user)
-            messages.success(request, 'Task initiated')
-        else:
-            messages.error(request, 'Please input your SSH passphase first.')
-    return redirect('home') 
 
 @login_required
 def setup_ssh(request):

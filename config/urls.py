@@ -30,12 +30,14 @@ urlpatterns = [
 
     # path('system/scan/cve/', main_views.get_system_info, name='get_system_info'),
     path('system/<int:system_id>/', main_views.manage_system, name='manage_system'),
-
-    path('system/get/info/', main_views.get_system_info, name='get_system_info'),
-    path('package/update/', main_views.update_package, name='update_package'),
     
     path('task/', main_views.list_task, name='list_task'),
     path('task/clear/', main_views.clear_task, name='clear_task'),
+
+    path('/ajax/system/info/', main_views.ajax_get_system_info, name='get_system_info'),
+    path('/ajax/package/update/', main_views.ajax_update_package, name='update_package'),
+    path('/ajax/installed/packages/', main_views.ajax_get_installed_packages_table, name='get_installed_packages_table'),
+    path('/ajax/outdated/packages/', main_views.ajax_get_outdated_packages_table, name='get_outdated_packages_table'),
 
     path('admin/', admin.site.urls), # TODO remove this
 ]
