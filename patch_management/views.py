@@ -177,4 +177,4 @@ def setup_ssh(request):
 @login_required
 def config_password_done(request):
     messages.success(request, 'Your password has been successfully updated.')
-    return redirect('home') 
+    return redirect('home')
