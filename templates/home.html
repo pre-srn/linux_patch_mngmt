@@ -14,16 +14,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for system in systems %}
-        <tr>
-            <td>
-                {{ system.hostname }}
-            </td>
-            <td class="align-middle">{{ system.system_os_name }}</td>
-            <td class="align-middle">{{ system.get_available_updates_count}} Update{{ system.get_available_updates_count|pluralize }} available</td>
-            <td><a href="{% url 'manage_system' system.id %}" class="btn btn-dark">Manage</a></td>
-        </tr>
-        {% endfor %}
+        {% include "ajax_templates/system_info_table.html" %}
     </tbody>
 </table>
 {% endblock content %}
