@@ -3,8 +3,8 @@
 {% block content %} 
 {% include "includes/inline_form.html" %}
 
-<button type="button" class="btn btn-info" id="btn-get-system-info">Get/Re-check system information</button>
-<button type="button" class="btn btn-dark" data-toggle="modal" data-target="#installedPackagesModel">View installed packages</button>
+<button type="button" class="btn btn-info" id="btnGetSystemInfo">Get/Re-check system information</button>
+<button type="button" class="btn btn-dark" data-toggle="modal" data-target="#installedPackagesModal">View installed packages</button>
 <button type="button" class="btn btn-success" data-toggle="modal" data-target="#updateAllPackagesModal" 
     data-package-id="{{ package.id }}" data-package-name="{{ package.name }}">
     Update all packages
@@ -20,31 +20,31 @@
             <th></th>
         </tr>
     </thead>
-    <tbody id="outdated_packages_table_body">
+    <tbody id="outdatedPackagesTableBody">
         {% include "ajax_templates/outdated_packages_table.html" %}
     </tbody>
 </table>
 
 <!-- Installed packages modal -->
-<div class="modal fade" id="installedPackagesModel" tabindex="-1" role="dialog" aria-labelledby="installedPackagesModelTitle" aria-hidden="true">
+<div class="modal fade" id="installedPackagesModal" tabindex="-1" role="dialog" aria-labelledby="installedPackagesModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="installedPackagesModelTitle">Installed packages</h5>
+                <h5 class="modal-title" id="installedPackagesModalTitle">Installed packages on {{ system_hostname }}</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body">
-                <table class="table">
-                    <thead class="thead-inverse">
+            <div class="table-responsive-md">
+                <table class="table table-sm table-striped">
+                    <thead class="thead-dark">
                         <tr>
-                            <th>#</th>
+                            <th class="text-center">#</th>
                             <th>Package name</th>
                             <th>Current Version</th>
                         </tr>
                     </thead>
-                    <tbody id="installed_packages_table_body">
+                    <tbody id="installedPackagesTableBody">
                         {% include "ajax_templates/installed_packages_table.html" %}
                     </tbody>
                 </table>
@@ -69,7 +69,7 @@
             <div class="modal-body">
                 <p>Do you really want to update
                     <strong>
-                        <span id="span-update-package-name"></span>
+                        <span id="spanUpdatePackageName"></span>
                     </strong>?
                 </p>
             </div>
@@ -78,7 +78,7 @@
                     <small>Note that related packages may automatically get updated at the same time.</small>
                 </p>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
-                <button type="button" class="btn btn-primary" id="btn-update-package">Yes</button>
+                <button type="button" class="btn btn-primary" id="btnUpdatePackage">Yes</button>
             </div>
         </div>
     </div>
@@ -99,7 +99,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
-                <button type="button" class="btn btn-primary" id="btn-update-all-packages">Yes</button>
+                <button type="button" class="btn btn-primary" id="btnUpdateAllPackages">Yes</button>
             </div>
         </div>
     </div>
@@ -113,11 +113,11 @@
         var package_id = button.data('package-id');
         var package_name = button.data('package-name');
         var modal = $(this);
-        modal.find('#span-update-package-name').text(package_name);
-        modal.find('#btn-update-package').data('package-id', package_id);
+        modal.find('#spanUpdatePackageName').text(package_name);
+        modal.find('#btnUpdatePackage').data('package-id', package_id);
     });
 
-    $("#btn-get-system-info").click(function () {
+    $("#btnGetSystemInfo").click(function () {
         $.ajax({
             type: 'post',
             url: '{% url "get_system_info" %}',
@@ -133,7 +133,7 @@
         });
     });
     
-    $("#btn-update-package").click(function () {
+    $("#btnUpdatePackage").click(function () {
         $.ajax({
             type: 'post',
             url: '{% url "update_package" %}',
@@ -152,7 +152,7 @@
         $('#updatePackageModal').modal('hide')
     });
 
-    $("#btn-update-all-packages").click(function () {
+    $("#btnUpdateAllPackages").click(function () {
         $.ajax({
             type: 'post',
             url: '{% url "update_all_packages" %}',
@@ -177,7 +177,7 @@
                 system_id: '{{ system_id }}'
             },
             success: function(response) {
-                $("#outdated_packages_table_body").html(response);
+                $("#outdatedPackagesTableBody").html(response);
             }
         });
         $.ajax({
@@ -186,9 +186,10 @@
                 system_id: '{{ system_id }}'
             },
             success: function(response) {
-                $("#installed_packages_table_body").html(response);
+                $("#installedPackagesTableBody").html(response);
             }
         });
     }
 </script>
-{% endblock %}
+{% include 'includes/task_notification.html' %}
+{% endblock javascript%}

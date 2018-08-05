@@ -3,7 +3,13 @@
     <td>
         {{ system.hostname }}
     </td>
-    <td class="align-middle">{{ system.system_os_name }}</td>
+    <td class="align-middle">{{ system.system_os_name }}
+        <a href="" class="badge badge-pill badge-secondary" data-toggle="modal" data-target="#systemInfoModal" 
+        data-system-hostname="{{ system.hostname }}" data-system-os-name="{{ system.system_os_name }}" 
+        data-system-os-version="{{ system.system_os_version }}" data-system-kernel="{{ system.system_kernel }}">
+            More detail
+        </button>
+    </td>
     <td class="align-middle">{{ system.get_available_updates_count}} Update{{ system.get_available_updates_count|pluralize }} available</td>
     <td>
         <a href="{% url 'manage_system' system.id %}" class="btn btn-dark">Manage</a>

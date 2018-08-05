@@ -2,7 +2,7 @@
 
 {% block content %}
 {% include "includes/inline_form.html" %}
-<button type="button" class="btn btn-info" id="btn-get-system-info">Get/Re-check system information</button>
+<button type="button" class="btn btn-info" id="btnGetSystemInfo">Get/Re-check system information</button>
 
 <table class="table">
     <thead class="thead-inverse">
@@ -13,15 +13,63 @@
             <th></th>
         </tr>
     </thead>
-    <tbody>
+    <tbody id="systemInfoTableBody">
         {% include "ajax_templates/system_info_table.html" %}
     </tbody>
 </table>
+
+<!-- Installed packages modal -->
+<div class="modal fade" id="systemInfoModal" tabindex="-1" role="dialog" aria-labelledby="systemInfoModalTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="systemInfoModalTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="table-responsive-md">
+                <table class="table table-striped">
+                    <tbody>
+                        <tr>
+                            <td><strong>System OS name:</strong></td>
+                            <td><span id="spanModalSystemOsName"></span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>System OS version:</strong></td>
+                            <td><span id="spanModalSystemOsVersion"></span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>System kernel version:</strong></td>
+                            <td><span id="spanModalSystemKernel"></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock content %}
 
 {% block javascript %}
 <script>
-    $("#btn-get-system-info").click(function () {
+    $('#systemInfoModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var system_hostname = button.data('system-hostname');
+        var system_os_name = button.data('system-os-name');
+        var system_os_version = button.data('system-os-version');
+        var system_kernel = button.data('system-kernel');
+        var modal = $(this);
+        modal.find('#systemInfoModalTitle').text(system_hostname);
+        modal.find('#spanModalSystemOsName').text(system_os_name);
+        modal.find('#spanModalSystemOsVersion').text(system_os_version);
+        modal.find('#spanModalSystemKernel').text(system_kernel);
+    });
+
+    $("#btnGetSystemInfo").click(function () {
         $.ajax({
             type: 'post',
             url: '{% url "get_system_info" %}',
@@ -40,5 +88,15 @@
             }
         });
     });
+
+    function refresh_page() {
+        $.ajax({
+            url: '{% url "get_system_info_table" %}',
+            success: function(response) {
+                $("#systemInfoTableBody").html(response);
+            }
+        });
+    }
 </script>
-{% endblock %}
+{% include 'includes/task_notification.html' %} 
+{% endblock javascript%}

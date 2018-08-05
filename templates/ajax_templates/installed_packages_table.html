@@ -1,6 +1,6 @@
 {% for package in installed_packages %}
 <tr>
-    <td>{{ forloop.counter }}</td>
+    <td class="text-center">{{ forloop.counter }}</td>
     <td>{{ package.name }}</td>
     <td>{{ package.current_version }}</td>
 </tr>

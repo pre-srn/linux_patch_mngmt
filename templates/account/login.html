@@ -1,11 +1,26 @@
 {% extends 'base.html' %} 
-
 {% block content %}
-<h2>Please login to the system</h2>
-<form method="post" novalidate>
-    {% csrf_token %}
-    <input type="hidden" name="next" value="{{ next }}">
-    {% include "includes/common_form.html" %}
-    <button type="submit" class="btn btn-success">Login</button>
-</form>
+
+<div class="jumbotron">
+    <div class="container">
+        <h1 class="display-4 text-monospace">
+            <span class="oi oi-cog"></span> Linux Patch Management.</h1>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="text-monospace text-center">Please login to the system</h3>
+    </div>
+    <div class="card-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}"> {% include "includes/common_form.html" %}
+            <button type="submit" class="btn btn-dark">Login</button>
+        </form>
+    </div>
+    <div class="card-footer text-muted text-center">
+        Or register a new account <a href="{% url 'register' %}" class="alert-link text-muted">here</a>.
+    </div>
+</div>
 {% endblock %}

@@ -76,6 +76,13 @@ def ajax_get_system_info(request):
 
 @login_required
 @ssh_setup_required
+def ajax_get_system_info_table(request):
+    systems = System.objects.filter(owner=request.user, connected=True)
+    return render(request, 'ajax_templates/system_info_table.html', {'systems': systems})
+
+
+@login_required
+@ssh_setup_required
 def ajax_get_installed_packages_table(request):
     if 'system_id' in request.GET:
         system_id = int(request.GET.get('system_id', None))

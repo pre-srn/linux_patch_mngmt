@@ -23,8 +23,10 @@ urlpatterns = [
     path('ajax/system/info/', main_views.ajax_get_system_info, name='get_system_info'),
     path('ajax/package/update/', main_views.ajax_update_package, name='update_package'),
     path('ajax/all/packages/update/', main_views.ajax_update_all_packages, name='update_all_packages'),
-    path('ajax/installed/packages/', main_views.ajax_get_installed_packages_table, name='get_installed_packages_table'),
-    path('ajax/outdated/packages/', main_views.ajax_get_outdated_packages_table, name='get_outdated_packages_table'),
+    
+    path('ajax/system/info/table/', main_views.ajax_get_system_info_table, name='get_system_info_table'),
+    path('ajax/installed/packages/table/', main_views.ajax_get_installed_packages_table, name='get_installed_packages_table'),
+    path('ajax/outdated/packages/table/', main_views.ajax_get_outdated_packages_table, name='get_outdated_packages_table'),
     path('ajax/task/status/', main_views.ajax_check_task_status, name='check_task_status'),
 
     path('admin/', admin.site.urls), # TODO remove this
