@@ -128,7 +128,7 @@
             dataType: 'json',
             success: function(response) {
                 if (response.error) toastr.error(response.message);
-                else toastr.success(response.message + "<p><small>[" + response.task_id + "]</small></p>");
+                else toastr.success(response.message);
             }
         });
     });
@@ -146,7 +146,7 @@
             dataType: 'json',
             success: function(response) {
                 if (response.error) toastr.error(response.message);
-                else toastr.success(response.message + "<p><small>[" + response.task_id + "]</small></p>");
+                else toastr.success(response.message);
             }
         });
         $('#updatePackageModal').modal('hide')
@@ -164,7 +164,7 @@
             dataType: 'json',
             success: function(response) {
                 if (response.error) toastr.error(response.message);
-                else toastr.success(response.message + "<p><small>[" + response.task_id + "]</small></p>");
+                else toastr.success(response.message);
             }
         });
         $('#updateAllPackagesModal').modal('hide')

@@ -9,3 +9,13 @@
     <button type="submit" class="btn btn-success">Save and test connection</button>
 </form>
 {% endblock content%}
+
+{% block javascript %}
+<script>
+    $(function() {
+        $("#sshConfigForm").on('submit', function(e) {
+            alert('clicked');
+        }); 
+    });
+</script>
+{% endblock javascript %}

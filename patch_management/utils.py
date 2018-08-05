@@ -11,11 +11,11 @@ def connect_ssh(ssh_addr, ssh_user, ssh_port, ssh_key, ssh_passphrase):
     conn = Connection(host=ssh_addr, 
                     user=ssh_user, 
                     port=ssh_port,
-                    connect_timeout=60,
                     connect_kwargs={
                         'key_filename': ssh_key, 
                         'passphrase': ssh_passphrase
-                        }
+                        },
+                    connect_timeout="60"
                     )
     try:
         conn.run('uname -s', hide=True)

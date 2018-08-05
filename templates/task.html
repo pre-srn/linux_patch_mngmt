@@ -7,31 +7,48 @@
             <tr>
                 <th>ID</th>
                 <th>Task</th>
-                <th>Initiated_at</th>
+                <th nowrap>Initiated at</th>
                 <th>Status</th>
                 <th>Message</th>
-                <th>Finished_at</th>
+                <th nowrap>Finished at</th>
             </tr>
         </thead>
         <tbody>
             {% for task in tasks %}
             <tr>
-                <td><small>{{ task.task_id }}</small></td>
-                <td>{{ task.task_name }}</td>
-                <td><small>{{ task.started_at|date:'d/m/Y H:i:s' }}</small></td>
+                <td>
+                    <small>{{ task.task_id }}</small>
+                </td>
+                <td>
+                    {{ task.task_name }}
+                </td>
+                <td>
+                    <small>{{ task.started_at|date:'d/m/Y H:i:s' }}</small>
+                </td>
                 {% if task.get_task_status == "SUCCESS" %}
-                    <td><span class="badge badge-success">{{ task.get_task_status }}</span></td>
+                <td>
+                    <span class="badge badge-success">{{ task.get_task_status }}</span>
+                </td>
                 {% elif task.get_task_status == "FAILURE" %}
-                    <td><span class="badge badge-danger">{{ task.get_task_status }}</span></td>
+                <td>
+                    <span class="badge badge-danger">{{ task.get_task_status }}</span>
+                </td>
                 {% else %}
-                    <td><span class="badge badge-info">{{ task.get_task_status }}</span></td>
+                <td>
+                    <span class="badge badge-info">{{ task.get_task_status }}</span>
+                </td>
                 {% endif %}
-                <td><small>{{ task.get_task_result }}</small></td>
-                <td><small>{{ task.get_task_date_done|date:'d/m/Y H:i:s' }}</small></td>
+                <td>
+                    <small>{{ task.get_task_result }}</small>
+                </td>
+                <td>
+                    <small>{{ task.get_task_date_done|date:'d/m/Y H:i:s' }}</small>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
 {% include 'includes/task_notification.html' %}
 {% endblock content %}
