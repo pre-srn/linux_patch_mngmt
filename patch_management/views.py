@@ -98,7 +98,11 @@ def setup_ssh(request):
         form = SetupSSHForm(instance=request.user.sshprofile)
 
     url_name = resolve(request.path_info).url_name
-    return render(request, 'account/{0}.html'.format(url_name), {'form': form, 'user': request.user})
+    first_time = False
+    if url_name == 'setup_ssh':
+        first_time = True
+
+    return render(request, 'account/config_ssh.html', {'form': form, 'user': request.user, 'first_time': first_time})
 
 @login_required
 def config_password_done(request):

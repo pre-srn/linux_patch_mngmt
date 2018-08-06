@@ -48,7 +48,8 @@
 <body>
     <div id="main-wrapper" class="container">
         {% include 'includes/messages.html' %} 
-        {% block content %} {% endblock %}
+        {% block message %}{% endblock %}
+        {% block content %}{% endblock %}
     </div>
     <script src="{% static 'js/jquery-3.3.1.min.js' %}"></script>
     <script src="{% static 'js/bootstrap.min.js' %}"></script>

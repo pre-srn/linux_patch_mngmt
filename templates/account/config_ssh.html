@@ -1,10 +1,42 @@
 {% extends 'base.html' %} 
 
+{% block message %}
+<div id="testingConnectionText" style="display: none !important;" class="alert alert-info alert-dismissible fade show" role="alert">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <span>Testing connection. Please wait...</span>
+</div>
+{% endblock %}
+
 {% block content %}
-<h2>SSH configuration</h2>
-<form method="post" enctype="multipart/form-data" novalidate>
-    {% csrf_token %} 
-    {% include "includes/common_form.html" %}
-    <button type="submit" class="btn btn-success">Save and test connection</button>
-</form>
+<div class="card">
+    <div class="card-header">
+        {% if first_time %}
+            <h2>Welcome {{ user.username }}</h2>
+            <h4>Please setup an SSH configuration to your Puppet master server</h4>
+        {% else %}
+            <h2>SSH configuration</h2>
+        {% endif %}
+    </div>
+    <form method="post" enctype="multipart/form-data" id="sshConfigForm" novalidate>
+        <div class="card-body">
+            {% csrf_token %} 
+            {% include "includes/common_form.html" %}
+        </div>
+        <div class="card-footer text-right">
+            <button type="submit" class="btn btn-dark">Save and test connection</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script>
+    $(function() {
+        $("#sshConfigForm").on('submit', function(e) {
+            $('#testingConnectionText').css("cssText", "display: block !important;");
+        });
+    }); 
+</script>
 {% endblock %}
