@@ -20,10 +20,10 @@ def celery_ssh_run_get_system_info(ssh_addr, ssh_user, ssh_port, ssh_key, ssh_pa
         connected_systems = process_ssh_res_connected_systems(ssh_connected_systems)
         sys_os_name, sys_os_ver, sys_kernel = process_ssh_res_sys_info(ssh_sys_info, connected_systems)
         installed_packages = process_ssh_res_installed_packages(ssh_installed_packages, connected_systems)
-        available_updates = process_ssh_res_available_updates(ssh_available_updates, connected_systems)
+        available_updates, package_manager = process_ssh_res_available_updates(ssh_available_updates, connected_systems)
 
         # Save all system information data
-        save_system_information(connected_systems, request_user_id, sys_os_name, sys_os_ver, sys_kernel, installed_packages, available_updates)
+        save_system_information(connected_systems, request_user_id, sys_os_name, sys_os_ver, sys_kernel, package_manager, installed_packages, available_updates)
     else:
         raise ConnectionError('Cannot connect to your Puppet master server. Your server may unavailable or your SSH passphase may incorrect.')
     return
@@ -43,7 +43,7 @@ def celery_ssh_run_update_package(ssh_addr, ssh_user, ssh_port, ssh_key, ssh_pas
             raise ConnectionError('Network connection / command error')
         
         installed_packages = process_ssh_res_installed_packages(ssh_installed_packages, [system_hostname])
-        available_updates = process_ssh_res_available_updates(ssh_available_updates, [system_hostname])
+        available_updates, package_manager = process_ssh_res_available_updates(ssh_available_updates, [system_hostname])
 
         # Checking the update result
         updated = check_package_update_result(package_name, available_updates[system_hostname])
@@ -64,17 +64,17 @@ def celery_ssh_run_update_all_packages(ssh_addr, ssh_user, ssh_port, ssh_key, ss
         packages = get_package_update_list(system_id)
         try:
             for package in packages:
-                ssh_conn.run('mco rpc package update package={0} -I {1}'.format(package.name, system_hostname), pty=True, hide=False)
+                ssh_conn.run('mco rpc package update package={0} -I {1}'.format(package.name, system_hostname), pty=True, hide=True)
 
             ssh_installed_packages = ssh_conn.run('mco shell run "rpm -qa --qf \'%{{NAME}}.%{{ARCH}} %{{VERSION}}-%{{RELEASE}}\n\' || \
                                                    dpkg-query -W -f=\'\${{Package}} \${{Version}}\n\'" -I {0}'.format(system_hostname), hide=True)
-            ssh_available_updates  = ssh_conn.run('mco rpc package checkupdates -I {0}'.format(system_hostname), pty=True, hide=False)
+            ssh_available_updates  = ssh_conn.run('mco rpc package checkupdates -I {0}'.format(system_hostname), pty=True, hide=True)
             ssh_conn.close()
         except Exception:
             raise ConnectionError('Network connection / command error.')
         
         installed_packages = process_ssh_res_installed_packages(ssh_installed_packages, [system_hostname])
-        available_updates = process_ssh_res_available_updates(ssh_available_updates, [system_hostname])
+        available_updates, package_manager = process_ssh_res_available_updates(ssh_available_updates, [system_hostname])
 
         # Checking the update result
         if len(available_updates[system_hostname]) == 0:
@@ -84,4 +84,21 @@ def celery_ssh_run_update_all_packages(ssh_addr, ssh_user, ssh_port, ssh_key, ss
 
     else:
         raise ConnectionError('Cannot connect to your Puppet master server. Your server may unavailable or your SSH passphase may incorrect.')
+    return
+
+@shared_task
+def celery_scan_cve():
+    import requests
+    from .models import System, Package, CVE
+
+
+    response = requests.get("https://access.redhat.com/labs/securitydataapi/cve.json?package={0}".format('openssh-7.4p1-16.el7'))
+    if (len(response.json() > 0)):
+        # process
+        for cve in response.json():
+            print (cve['CVE'])
+            print (cve['severity'])
+            print (cve['bugzilla_description'])
+            print (cve['cvss3_score'])
+    
     return

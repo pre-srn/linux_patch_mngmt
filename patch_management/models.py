@@ -27,6 +27,7 @@ class System(models.Model):
     system_os_name = models.CharField(max_length=255)
     system_os_version = models.CharField(max_length=255)
     system_kernel = models.CharField(max_length=255)
+    system_package_manager = models.CharField(max_length=255)
     owner = models.ForeignKey(User, related_name='systems', on_delete=models.CASCADE)
 
     class Meta:
@@ -51,10 +52,21 @@ class Package(models.Model):
     def __str__(self):
         return self.name + ' (' + self.current_version + ')'
 
+class CVE(models.Model):
+    task_id = models.CharField(max_length=255, unique=True)
+    description = models.TextField()
+    cvss = models.DecimalField(max_digits=4, decimal_places=2)
+    severity = models.CharField(max_length=10)
+    package = models.ForeignKey(Package, related_name='cves', on_delete=models.CASCADE) 
+    system = models.ForeignKey(System, related_name='cves', on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = (("task_id", "package", "system"),)
+
 class Task(models.Model):
     task_id = models.CharField(max_length=255, unique=True)
     task_name = models.CharField(max_length=255)
-    started_at = models.DateTimeField(auto_now=True)
+    started_at = models.DateTimeField(auto_now_add=True)
     is_notified = models.BooleanField(default=False)
     initiated_by = models.ForeignKey(User, related_name='tasks', on_delete=models.CASCADE)
 

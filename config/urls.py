@@ -16,6 +16,8 @@ urlpatterns = [
     # path('system/scan/cve/', main_views.get_system_info, name='get_system_info'),
     path('system/<int:system_id>/', main_views.manage_system, name='manage_system'),
     
+    path('cve/scan/', main_views.scan_cve, name='scan_cve'),
+    
     path('task/', main_views.list_task, name='list_task'),
     path('task/clear/', main_views.clear_task, name='clear_task'),
 

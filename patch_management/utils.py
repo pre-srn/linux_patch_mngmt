@@ -37,7 +37,7 @@ def is_puppet_running(ssh_conn):
         return False
 
 
-def save_system_information(connected_systems, request_user_id, sys_os_name, sys_os_ver, sys_kernel, installed_packages, available_updates):
+def save_system_information(connected_systems, request_user_id, sys_os_name, sys_os_ver, sys_kernel, package_manager, installed_packages, available_updates):
     request_user = User.objects.get(id=request_user_id)
 
     # Reset all connection states
@@ -48,7 +48,9 @@ def save_system_information(connected_systems, request_user_id, sys_os_name, sys
                                         defaults = {'connected': True, 
                                                     'system_os_name': sys_os_name[connected_system],
                                                     'system_os_version': sys_os_ver[connected_system], 
-                                                    'system_kernel': sys_kernel[connected_system]}
+                                                    'system_kernel': sys_kernel[connected_system],
+                                                    'system_package_manager': package_manager[connected_system]
+                                                    }
                                         )
 
         cur_system = System.objects.get(hostname = connected_system, owner=request_user)
@@ -123,6 +125,7 @@ def process_ssh_res_installed_packages(ssh_installed_packages, connected_systems
 
 def process_ssh_res_available_updates(ssh_available_updates, connected_systems):
     available_updates = {}
+    package_manager = {}
     ssh_available_update_lines = iter(ssh_available_updates.stdout.split('\n'))
     for line in ssh_available_update_lines:
         line = line.strip() 
@@ -152,7 +155,9 @@ def process_ssh_res_available_updates(ssh_available_updates, connected_systems):
                 if not package_name.startswith('gpg-pubkey'):
                     available_update_info.append([package_name, package_version])
             available_updates[cur_connected_system] = available_update_info
-    return available_updates
+        elif line.startswith('Package Manager:'):
+            package_manager[cur_connected_system] = line.split(':', 2)[1].strip()
+    return available_updates, package_manager
 
 
 def get_package_update_list(system_id):

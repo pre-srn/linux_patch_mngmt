@@ -32,16 +32,20 @@
                 <table class="table table-striped">
                     <tbody>
                         <tr>
-                            <td><strong>System OS name:</strong></td>
+                            <td><strong>OS name:</strong></td>
                             <td><span id="spanModalSystemOsName"></span></td>
                         </tr>
                         <tr>
-                            <td><strong>System OS version:</strong></td>
+                            <td><strong>OS version:</strong></td>
                             <td><span id="spanModalSystemOsVersion"></span></td>
                         </tr>
                         <tr>
-                            <td><strong>System kernel version:</strong></td>
+                            <td><strong>Kernel version:</strong></td>
                             <td><span id="spanModalSystemKernel"></span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Package manager:</strong></td>
+                            <td><span id="spanModalSystemPackageManager"></span></td>
                         </tr>
                     </tbody>
                 </table>
@@ -62,11 +66,13 @@
         var system_os_name = button.data('system-os-name');
         var system_os_version = button.data('system-os-version');
         var system_kernel = button.data('system-kernel');
+        var system_package_manager = button.data('system-package-manager');
         var modal = $(this);
         modal.find('#systemInfoModalTitle').text(system_hostname);
         modal.find('#spanModalSystemOsName').text(system_os_name);
         modal.find('#spanModalSystemOsVersion').text(system_os_version);
         modal.find('#spanModalSystemKernel').text(system_kernel);
+        modal.find('#spanModalSystemPackageManager').text(system_package_manager);
     });
 
     $("#btnGetSystemInfo").click(function () {

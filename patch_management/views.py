@@ -110,6 +110,13 @@ def config_password_done(request):
     return redirect('home')
 
 
+@login_required
+@ssh_setup_required
+def scan_cve(request):
+    celery_scan_cve()
+    return redirect('home')
+
+
 ######################################################
 # AJAX request views
 ######################################################
