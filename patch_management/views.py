@@ -154,7 +154,7 @@ def ajax_get_system_info(request):
 @login_required
 @ssh_setup_required
 def ajax_get_system_info_table(request):
-    systems = System.objects.filter(owner=request.user, connected=True)
+    systems = System.objects.filter(owner=request.user, connected=True).order_by('hostname')
     return render(request, 'ajax_templates/system_info_table.html', {'systems': systems})
 
 
