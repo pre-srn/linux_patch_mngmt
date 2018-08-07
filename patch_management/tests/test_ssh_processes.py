@@ -30,6 +30,10 @@ class TestSSHProcesses(TestCase):
             'managed.server':       [['app-2', '1:9.9.9'], 
                                      ['app-3', '1:9.1.2']]
             }
+        self.package_managers = {
+            'puppet-master.server': 'yum',
+            'managed.server':       'apt'
+            }
 
     def test_process_ssh_res_connected_systems(self):
         ssh_result = SSHResult(connection=None, 
@@ -154,5 +158,6 @@ puppet-master.server\n\
 \n\
 Finished processing ?[32m2?[0m / ?[32m2?[0m hosts in 3142.49 ms\n\
 ')
-        available_updates = process_ssh_res_available_updates(ssh_result, self.connected_systems)
+        available_updates, package_managers = process_ssh_res_available_updates(ssh_result, self.connected_systems)
         self.assertDictEqual(available_updates, self.available_updates)
+        self.assertDictEqual(package_managers, self.package_managers)
