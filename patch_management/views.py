@@ -26,7 +26,7 @@ def register(request):
         if form.is_valid():
             user = form.save()
             auth_login(request, user)
-            return redirect('home')
+            return redirect('setup_ssh')
     else:
         form = UserCreationForm()
     return render(request, 'account/register.html', {'form': form})
