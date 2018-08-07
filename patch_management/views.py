@@ -35,8 +35,9 @@ def register(request):
 @ssh_setup_required
 def home(request):
     systems = System.objects.filter(owner=request.user, connected=True)
+    total_systems = systems.count()
     form = SSHPassphaseSubmitForm()
-    return render(request, 'home.html', {'form': form, 'systems': systems})
+    return render(request, 'home.html', {'form': form, 'systems': systems, 'total_systems': total_systems})
 
 @login_required
 @ssh_setup_required
@@ -55,7 +56,8 @@ def manage_system(request, system_id):
 @ssh_setup_required
 def list_task(request):
     tasks = Task.objects.filter(initiated_by=request.user).order_by('-started_at')
-    return render(request, 'task.html', {'tasks': tasks})
+    total_tasks = tasks.count()
+    return render(request, 'task.html', {'tasks': tasks, 'total_tasks': total_tasks})
 
 @login_required
 @ssh_setup_required
@@ -99,9 +101,9 @@ def setup_ssh(request):
                                             <p><small>[{0}]</small></p>'.format(celery_task_id))
                     return redirect('home')
                 else:
-                    messages.error(request, 'Puppet or Mcollective is not installed/running on your server. Please recheck again.')
+                    messages.error(request, 'Puppet or Mcollective is not installed/running on your server. Please setup and recheck again.')
             else:
-                messages.error(request, 'Cannot connect to your server. Please check your connection.')
+                messages.error(request, 'Cannot connect to your server. Your SSH login certificate may be invalid or your server may be unavailable.')
             
             if 'ssh_key' in request.FILES: delete_tmp_file(tmp_ssh_key)
     else:
@@ -195,6 +197,14 @@ def ajax_get_cve_info_table(request):
 
 @login_required
 @ssh_setup_required
+def ajax_get_task_info_table(request):
+    tasks = Task.objects.filter(initiated_by=request.user).order_by('-started_at')
+    total_tasks = tasks.count()
+    return render(request, 'ajax_templates/task_info_table.html', {'tasks': tasks, 'total_tasks': total_tasks})
+
+
+@login_required
+@ssh_setup_required
 def ajax_update_package(request):
     if request.method == 'POST':
         form = UpdatePackageAjaxSubmitForm(request.POST)
@@ -280,7 +290,7 @@ def ajax_scan_cve_specific_system(request, system_id):
         response['message'] = 'Task initiated<p><small>[{0}]</small></p>'.format(celery_task_id)
     else:
         response['error'] = True
-        response['message'] = "This system doesn't support CVE scanning as it doesn't use RPM."
+        response['message'] = "This system doesn't support CVE scanning at the moment as it doesn't use RPM."
     return JsonResponse(response)
 
 

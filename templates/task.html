@@ -6,24 +6,12 @@
         <h4>Submitted Tasks</h4>
         <button type="button" class="btn btn-secondary ml-auto" data-toggle="modal" data-target="#clearTasksModal">Clear completed tasks</button>
     </div>
-    <div class="card-body scroll">
-        <div class="table-responsive-md">
-            <table class="table">
-                <thead class="thead-inverse">
-                    <tr>
-                        <th>ID</th>
-                        <th>Task</th>
-                        <th nowrap>Initiated at</th>
-                        <th>Status</th>
-                        <th>Message</th>
-                        <th nowrap>Finished at</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% include "ajax_templates/task_info_table.html" %}
-                </tbody>
-            </table>
-        </div>
+    <div class="card-body scroll" id="taskInfoTableWrapper">
+        {% if total_tasks == 0 %}
+            <p class="blockquote">Currently, there are no submitted tasks.</p>
+        {% else %}
+            {% include "ajax_templates/task_info_table.html" %}
+        {% endif %}
     </div>
 </div>
 
@@ -47,6 +35,18 @@
         </div>
     </div>
 </div>
-
-{% include 'includes/task_notification.html' %}
 {% endblock content %}
+
+{% block javascript %}
+<script>
+function refresh_page() {
+    $.ajax({
+        url: '{% url "get_task_info_table" %}',
+        success: function(response) {
+            $("#taskInfoTableWrapper").html(response);
+        }
+    });
+}
+</script>
+{% include 'includes/task_notification.html' %} 
+{% endblock javascript%}

@@ -1,23 +1,36 @@
-{% for system in systems %}
-<tr>
-    <td>
-        {{ system.hostname }}
-    </td>
-    <td class="align-middle">{{ system.system_os_name }}
-        <a href="" class="badge badge-pill badge-secondary" data-toggle="modal" data-target="#systemInfoModal" 
-        data-system-hostname="{{ system.hostname }}" data-system-os-name="{{ system.system_os_name }}" 
-        data-system-os-version="{{ system.system_os_version }}" data-system-kernel="{{ system.system_kernel }}"
-        data-system-package-manager="{{ system.system_package_manager }}">
-            More detail
-        </button>
-    </td>
-    <td class="align-middle">
-        {{ system.get_available_updates_count}} Update{{ system.get_available_updates_count|pluralize }} available
-        /
-        {{ system.get_cves_count}} CVE{{ system.get_cves_count|pluralize }}
-    </td>
-    <td>
-        <a href="{% url 'manage_system' system.id %}" class="btn btn-dark">Manage</a>
-    </td>
-</tr>
-{% endfor %}
+<table class="table">
+    <thead class="thead-inverse">
+        <tr>
+            <th>Connected system</th>
+            <th>System information</th>
+            <th>Patch information</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for system in systems %}
+        <tr>
+            <td>
+                {{ system.hostname }}
+            </td>
+            <td class="align-middle">{{ system.system_os_name }}
+                <a href="" class="badge badge-pill badge-secondary" data-toggle="modal" data-target="#systemInfoModal" 
+                data-system-hostname="{{ system.hostname }}" data-system-os-name="{{ system.system_os_name }}" 
+                data-system-os-version="{{ system.system_os_version }}" data-system-kernel="{{ system.system_kernel }}"
+                data-system-package-manager="{{ system.system_package_manager }}">
+                    Detail
+                </button>
+            </td>
+            <td class="align-middle">
+                <h6>
+                    <span class="badge badge-warning">{{ system.get_available_updates_count}} Updates available</span>
+                    <span class="badge badge-warning">{{ system.get_cves_count}} CVEs</span>
+                </h6>
+            </td>
+            <td>
+                <a href="{% url 'manage_system' system.id %}" class="btn btn-dark">Manage</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
