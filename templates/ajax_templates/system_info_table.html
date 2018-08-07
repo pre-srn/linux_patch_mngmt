@@ -23,8 +23,27 @@
             </td>
             <td class="align-middle">
                 <h6>
-                    <span class="badge badge-warning">{{ system.get_available_updates_count}} Updates available</span>
-                    <span class="badge badge-warning">{{ system.get_cves_count}} CVEs</span>
+                    {% if system.get_available_updates_count > 0 %}
+                        {% if system.get_available_updates_count <= 10 %}
+                        <span class="badge badge-secondary">
+                        {% elif system.get_available_updates_count <= 30 %}
+                        <span class="badge badge-warning">
+                        {% else %}
+                        <span class="badge badge-danger">
+                        {% endif %}
+                    {% else %}
+                        {% if system.get_max_cve_severity == 'low' %}
+                        <span class="badge badge-secondary">
+                        {% elif system.get_max_cve_severity == 'moderate' %}
+                        <span class="badge badge-warning">
+                        {% else %}
+                        <span class="badge badge-danger">
+                        {% endif %}
+                    {% endif %}
+                        {{ system.get_available_updates_count}} updates available
+                        /
+                        {{ system.get_cves_count}} CVEs
+                    </span>
                 </h6>
             </td>
             <td>

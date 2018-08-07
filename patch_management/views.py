@@ -34,7 +34,7 @@ def register(request):
 @login_required
 @ssh_setup_required
 def home(request):
-    systems = System.objects.filter(owner=request.user, connected=True)
+    systems = System.objects.filter(owner=request.user, connected=True).order_by('hostname')
     total_systems = systems.count()
     form = SSHPassphaseSubmitForm()
     return render(request, 'home.html', {'form': form, 'systems': systems, 'total_systems': total_systems})
