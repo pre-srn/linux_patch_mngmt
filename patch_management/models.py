@@ -33,11 +33,18 @@ class System(models.Model):
     class Meta:
         unique_together = (("hostname", "owner"),)
 
-    def __str__(self):
-        return self.hostname
-
     def get_available_updates_count(self):
         return Package.objects.filter(system=self, active=True, new_version__isnull=False).count()
+
+    def get_cves_count(self):
+        return CVE.objects.filter(system=self).count()
+
+    def get_cves_scanned_date(self):
+        cve = CVE.objects.filter(system=self).order_by('-scanned_at')[0]
+        return cve.scanned_at
+
+    def __str__(self):
+        return self.hostname
 
 class Package(models.Model):
     name = models.CharField(max_length=255)
@@ -50,18 +57,22 @@ class Package(models.Model):
         unique_together = (("name", "system"),)
 
     def __str__(self):
-        return self.name + ' (' + self.current_version + ')'
+        return '{0} ({1})'.format(self.name, self.current_version)
 
 class CVE(models.Model):
-    task_id = models.CharField(max_length=255, unique=True)
+    cve_id = models.CharField(max_length=255, unique=True)
     description = models.TextField()
-    cvss = models.DecimalField(max_digits=4, decimal_places=2)
-    severity = models.CharField(max_length=10)
+    cvss_v3 = models.DecimalField(max_digits=4, decimal_places=2, null=True)
+    severity = models.CharField(max_length=20)
+    scanned_at = models.DateTimeField(auto_now_add=True)
     package = models.ForeignKey(Package, related_name='cves', on_delete=models.CASCADE) 
     system = models.ForeignKey(System, related_name='cves', on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = (("task_id", "package", "system"),)
+        unique_together = (("cve_id", "package", "system"),)
+
+    def __str__(self):
+        return '{0} on {1}'.format(self.cve_id, self.system.hostname)
 
 class Task(models.Model):
     task_id = models.CharField(max_length=255, unique=True)

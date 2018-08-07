@@ -1,3 +1,4 @@
+import requests
 from celery import shared_task
 from .utils import *
 
@@ -87,18 +88,31 @@ def celery_ssh_run_update_all_packages(ssh_addr, ssh_user, ssh_port, ssh_key, ss
     return
 
 @shared_task
-def celery_scan_cve():
-    import requests
-    from .models import System, Package, CVE
+def celery_scan_cve(request_user_id, input_system_id):
+    package_list = get_cve_package_list(request_user_id, input_system_id)
 
-
-    response = requests.get("https://access.redhat.com/labs/securitydataapi/cve.json?package={0}".format('openssh-7.4p1-16.el7'))
-    if (len(response.json() > 0)):
-        # process
-        for cve in response.json():
-            print (cve['CVE'])
-            print (cve['severity'])
-            print (cve['bugzilla_description'])
-            print (cve['cvss3_score'])
+    cve_info = {}
+    for system_id in package_list.keys():
+        packages = package_list[system_id]
+        cve_info_per_system = []
+        for package in packages:
+            package_id = package[0]
+            package_name = package[1]
+            response = requests.get('https://access.redhat.com/labs/securitydataapi/cve.json?package={0}'.format(package_name))
+            if (len(response.json()) > 0):
+                for cve in response.json():
+                    cve_info_record = {}
+                    cve_info_record['package_id']   = package_id
+                    cve_info_record['cve_id']       = cve['CVE']
+                    cve_info_record['description']  = cve['bugzilla_description'].split(': ',1)[1].strip()
+                    cve_info_record['severity']     = cve['severity']
+                    if 'cvss3_score' in cve:
+                        cve_info_record['cvss3_score'] = cve['cvss3_score']
+                    else:
+                        cve_info_record['cvss3_score'] = None
+                    cve_info_per_system.append(cve_info_record)
+        cve_info[system_id] = (cve_info_per_system)
     
+    save_cve_information(cve_info)
+
     return

@@ -42,12 +42,14 @@ def home(request):
 @ssh_setup_required
 def manage_system(request, system_id):
     form = SSHPassphaseSubmitForm()
-    system = get_object_or_404(System.objects.filter(owner=request.user), pk=system_id)
+    system = get_object_or_404(System.objects.filter(owner=request.user, connected=True), pk=system_id)
     installed_packages = system.packages.filter(active=True).order_by(Lower('name'))
     outdated_packages = installed_packages.filter(new_version__isnull=False).order_by(Lower('name'))
+    case_sql = '(case when severity="low" then 1 when severity="moderate" then 2 when severity="important" then 3 when severity="critical" then 4 end)'
+    cves = CVE.objects.filter(system=system).extra(select={'severity_order': case_sql}, order_by=['package__name', '-severity_order'])
     return render(request, 'system.html', 
         {'form': form, 'installed_packages': installed_packages, 'outdated_packages': outdated_packages,
-        'system_id': system_id, 'system_hostname': system.hostname})
+        'system': system, 'cves': cves})
 
 @login_required
 @ssh_setup_required
@@ -58,11 +60,11 @@ def list_task(request):
 @login_required
 @ssh_setup_required
 def clear_task(request):
-    tasks = Task.objects.filter(initiated_by=request.user)
+    tasks = Task.objects.filter(initiated_by=request.user, is_notified=True)
     for task in tasks:
         TaskResult.objects.filter(task_id=task.task_id).delete()
     tasks.delete()
-    messages.success(request, 'All task results have been cleared.')
+    messages.success(request, 'All completed tasks have been cleared.')
     return redirect('list_task')
 
 @login_required
@@ -82,11 +84,19 @@ def setup_ssh(request):
             # Test connection
             if is_connected:
                 if (is_puppet_running(ssh_connection)):
-                    messages.info(request, 'Successfully connected to your Puppet master server. \
-                                            A task to get system information has been initiated.')
                     form.save()
-                    ssh_run_get_system_info(ssh_connection, request.user)
                     if 'ssh_key' in request.FILES: delete_tmp_file(tmp_ssh_key)
+                    ssh_profile = request.user.sshprofile
+                    celery_task_id = celery_ssh_run_get_system_info.delay(str(ssh_profile.ssh_server_address), 
+                                                                        str(ssh_profile.ssh_username),
+                                                                        str(ssh_profile.ssh_server_port),
+                                                                        str(ssh_profile.ssh_key),
+                                                                        str(form.cleaned_data['ssh_passphase']), 
+                                                                        request.user.id)
+                    Task.objects.create(task_id=celery_task_id, task_name="Get system information", initiated_by=request.user)
+                    messages.info(request, 'Successfully connected to your Puppet master server. \
+                                            A task to get system information has been initiated. \
+                                            <p><small>[{0}]</small></p>'.format(celery_task_id))
                     return redirect('home')
                 else:
                     messages.error(request, 'Puppet or Mcollective is not installed/running on your server. Please recheck again.')
@@ -107,13 +117,6 @@ def setup_ssh(request):
 @login_required
 def config_password_done(request):
     messages.success(request, 'Your password has been successfully updated.')
-    return redirect('home')
-
-
-@login_required
-@ssh_setup_required
-def scan_cve(request):
-    celery_scan_cve()
     return redirect('home')
 
 
@@ -158,7 +161,7 @@ def ajax_get_system_info_table(request):
 def ajax_get_installed_packages_table(request):
     if 'system_id' in request.GET:
         system_id = int(request.GET.get('system_id', None))
-        system = get_object_or_404(System.objects.filter(owner=request.user), pk=system_id)
+        system = get_object_or_404(System.objects.filter(owner=request.user, connected=True), pk=system_id)
         installed_packages = system.packages.filter(active=True).order_by(Lower('name'))
         return render(request, 'ajax_templates/installed_packages_table.html', {'installed_packages': installed_packages})
     else:
@@ -170,11 +173,24 @@ def ajax_get_installed_packages_table(request):
 def ajax_get_outdated_packages_table(request):
     if 'system_id' in request.GET:
         system_id = int(request.GET.get('system_id', None))
-        system = get_object_or_404(System.objects.filter(owner=request.user), pk=system_id)
+        system = get_object_or_404(System.objects.filter(owner=request.user, connected=True), pk=system_id)
         outdated_packages = system.packages.filter(active=True, new_version__isnull=False).order_by(Lower('name'))
         return render(request, 'ajax_templates/outdated_packages_table.html', {'outdated_packages': outdated_packages})
     else:
         return redirect('home') 
+
+
+@login_required
+@ssh_setup_required
+def ajax_get_cve_info_table(request):
+    if 'system_id' in request.GET:
+        system_id = int(request.GET.get('system_id', None))
+        system = get_object_or_404(System.objects.filter(owner=request.user, connected=True), pk=system_id)
+        case_sql = '(case when severity="low" then 1 when severity="moderate" then 2 when severity="important" then 3 when severity="critical" then 4 end)'
+        cves = CVE.objects.filter(system=system).extra(select={'severity_order': case_sql}, order_by=['package__name', 'severity_order'])
+        return render(request, 'ajax_templates/cve_info_table.html', {'system': system, 'cves': cves})
+    else:
+        return redirect('home')
 
 
 @login_required
@@ -186,7 +202,7 @@ def ajax_update_package(request):
         if form.is_valid():
             system_id = int(form.cleaned_data['system_id'])
             package_id = int(form.cleaned_data['package_id'])
-            system = get_object_or_404(System.objects.filter(owner=request.user), pk=system_id)
+            system = get_object_or_404(System.objects.filter(owner=request.user, connected=True), pk=system_id)
             package = get_object_or_404(system.packages, pk=package_id)
             ssh_profile = request.user.sshprofile
             celery_task_id = celery_ssh_run_update_package.delay(str(ssh_profile.ssh_server_address), 
@@ -219,7 +235,7 @@ def ajax_update_all_packages(request):
         response = {}
         if form.is_valid():
             system_id = int(form.cleaned_data['system_id'])
-            system = get_object_or_404(System.objects.filter(owner=request.user), pk=system_id)
+            system = get_object_or_404(System.objects.filter(owner=request.user, connected=True), pk=system_id)
             ssh_profile = request.user.sshprofile
             celery_task_id = celery_ssh_run_update_all_packages.delay(str(ssh_profile.ssh_server_address), 
                                                                     str(ssh_profile.ssh_username),
@@ -239,6 +255,33 @@ def ajax_update_all_packages(request):
         return JsonResponse(response)
     else:
         return redirect('home')
+
+
+@login_required
+@ssh_setup_required
+def ajax_scan_cve_all_systems(request):
+    response = {}
+    celery_task_id = celery_scan_cve.delay(request.user.id, None)
+    Task.objects.create(task_id=celery_task_id, task_name="Scan CVE on all systems", initiated_by=request.user)
+    response['error'] = False
+    response['message'] = 'Task initiated<p><small>[{0}]</small></p>'.format(celery_task_id)
+    return JsonResponse(response)
+
+
+@login_required
+@ssh_setup_required
+def ajax_scan_cve_specific_system(request, system_id):
+    response = {}
+    system = get_object_or_404(System.objects.filter(owner=request.user, connected=True), pk=system_id)
+    if system.system_package_manager == 'yum':
+        celery_task_id = celery_scan_cve.delay(request.user.id, system.id)
+        Task.objects.create(task_id=celery_task_id, task_name="Scan CVE on {0}".format(system.hostname), initiated_by=request.user)
+        response['error'] = False
+        response['message'] = 'Task initiated<p><small>[{0}]</small></p>'.format(celery_task_id)
+    else:
+        response['error'] = True
+        response['message'] = "This system doesn't support CVE scanning as it doesn't use RPM."
+    return JsonResponse(response)
 
 
 @login_required

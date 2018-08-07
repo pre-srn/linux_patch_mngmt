@@ -2,23 +2,35 @@
 
 {% block content %}
 {% include "includes/inline_form.html" %}
-<button type="button" class="btn btn-info" id="btnGetSystemInfo">Get/Re-check system information</button>
+<div class="card small-margin-bottom">
+    <div class="card-body">
+        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#getSystemInfoModal">Get/Re-check system information</button>
+        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#scanCVEModal">Scan CVE on all systems</button>
+    </div>
+</div>
 
-<table class="table">
-    <thead class="thead-inverse">
-        <tr>
-            <th>Connected servers</th>
-            <th>System information</th>
-            <th>Patch information</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody id="systemInfoTableBody">
-        {% include "ajax_templates/system_info_table.html" %}
-    </tbody>
-</table>
+<div class="card">
+    <div class="card-header">
+        <h4>Managed systems</h4>
+    </div>
+    <div class="card-body scroll">
+        <table class="table">
+            <thead class="thead-inverse">
+                <tr>
+                    <th>Connected system</th>
+                    <th>System information</th>
+                    <th>Patch information</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="systemInfoTableBody">
+                {% include "ajax_templates/system_info_table.html" %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
-<!-- Installed packages modal -->
+<!-- System information modal -->
 <div class="modal fade" id="systemInfoModal" tabindex="-1" role="dialog" aria-labelledby="systemInfoModalTitle" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -52,6 +64,48 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Get system information confirmation modal -->
+<div class="modal fade" id="getSystemInfoModal" tabindex="-1" role="dialog" aria-labelledby="getSystemInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="getSystemInfoModalLabel">Getting/Re-checking system information</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Do you really want to get/re-check system information?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                <button type="button" class="btn btn-primary" id="btnGetSystemInfo">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scan CVE confirmation modal -->
+<div class="modal fade" id="scanCVEModal" tabindex="-1" role="dialog" aria-labelledby="scanCVEModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="scanCVEModalLabel">Scanning CVE on all systems</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Do you really want to scan CVE on all systems?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                <button type="button" class="btn btn-primary" id="btnScanSystemCVE">Yes</button>
             </div>
         </div>
     </div>
@@ -93,6 +147,17 @@
                 }
             }
         });
+    });
+
+    $("#btnScanSystemCVE").click(function () {
+        $.ajax({
+            url: '{% url "scan_cve_all_systems" %}',
+            success: function(response) {
+                if (response.error) toastr.error(response.message);
+                else toastr.success(response.message);
+            }
+        });
+        $('#scanCVEModal').modal('hide')
     });
 
     function refresh_page() {

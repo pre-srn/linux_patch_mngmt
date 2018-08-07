@@ -11,7 +11,11 @@
             More detail
         </button>
     </td>
-    <td class="align-middle">{{ system.get_available_updates_count}} Update{{ system.get_available_updates_count|pluralize }} available</td>
+    <td class="align-middle">
+        {{ system.get_available_updates_count}} Update{{ system.get_available_updates_count|pluralize }} available
+        /
+        {{ system.get_cves_count}} CVE{{ system.get_cves_count|pluralize }}
+    </td>
     <td>
         <a href="{% url 'manage_system' system.id %}" class="btn btn-dark">Manage</a>
     </td>

@@ -1,53 +1,58 @@
 {% extends 'base.html' %} 
 
-{% block content %} 
+{% block content %}
 {% include "includes/inline_form.html" %}
 
-<button type="button" class="btn btn-info" id="btnGetSystemInfo">Get/Re-check system information</button>
-<button type="button" class="btn btn-dark" data-toggle="modal" data-target="#installedPackagesModal">View installed packages</button>
-<button type="button" class="btn btn-success" data-toggle="modal" data-target="#updateAllPackagesModal" 
-    data-package-id="{{ package.id }}" data-package-name="{{ package.name }}">
-    Update all packages
-</button>
+<div class="card small-margin-bottom">
+    <div class="card-body">
+        <button type="button" class="btn btn-dark" data-toggle="modal" data-target="#installedPackagesModal">View installed packages</button>
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#updateAllPackagesModal" 
+            data-package-id="{{ package.id }}" data-package-name="{{ package.name }}">
+            Update all packages
+        </button>
+        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#scanCVEModal">Scan CVE on this system</button>
+    </div>
+</div>
 
-<table class="table">
-    <thead class="thead-inverse">
-        <tr>
-            <th>#</th>
-            <th>Package name</th>
-            <th>Current Version</th>
-            <th>New Version</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody id="outdatedPackagesTableBody">
-        {% include "ajax_templates/outdated_packages_table.html" %}
-    </tbody>
-</table>
+<div class="card small-margin-bottom">
+    <div class="card-header">
+        <h4>Available updates on {{ system.hostname }}</h4>
+    </div>
+    <div class="card-body scroll" id="outdatedPackagesTableWrapper">
+        {% if system.get_available_updates_count == 0 %}
+            <p class="blockquote"><span class="oi oi-check"></span> All packages are up-to-date.</p>
+        {% else %}
+            {% include "ajax_templates/outdated_packages_table.html" %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="card" id="cveInfoWrapper">
+    {% if system.get_cves_count == 0 %}
+        <div class="card-header">
+            <h4>CVE information on {{ system.hostname }}</h4>
+        </div>
+        <div class="card-body">
+            <p class="blockquote">No CVE information found.</p>
+            <p><em>Please scan/re-scan the system to analyse CVE.</em></p>
+        </div>
+    {% else %}
+        {% include "ajax_templates/cve_info_table.html" %}
+    {% endif %}
+</div>
 
 <!-- Installed packages modal -->
 <div class="modal fade" id="installedPackagesModal" tabindex="-1" role="dialog" aria-labelledby="installedPackagesModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="installedPackagesModalTitle">Installed packages on {{ system_hostname }}</h5>
+                <h5 class="modal-title" id="installedPackagesModalTitle">Installed packages on {{ system.hostname }}</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="table-responsive-md">
-                <table class="table table-sm table-striped">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th class="text-center">#</th>
-                            <th>Package name</th>
-                            <th>Current Version</th>
-                        </tr>
-                    </thead>
-                    <tbody id="installedPackagesTableBody">
-                        {% include "ajax_templates/installed_packages_table.html" %}
-                    </tbody>
-                </table>
+            <div class="table-responsive-md" id="installedPackagesTableWrapper">
+                {% include "ajax_templates/installed_packages_table.html" %}
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -95,11 +100,74 @@
                 </button>
             </div>
             <div class="modal-body">
-                <p>Do you really want to update <strong>all packages</strong> on {{ system_hostname }}?</p>
+                <p>Do you really want to update <strong>all packages</strong> on {{ system.hostname }}?</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
                 <button type="button" class="btn btn-primary" id="btnUpdateAllPackages">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scan CVE confirmation modal -->
+<div class="modal fade" id="scanCVEModal" tabindex="-1" role="dialog" aria-labelledby="scanCVEModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="scanCVEModalLabel">Scanning CVE on this system</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Do you really want to scan CVE on {{ system.hostname }}?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                <button type="button" class="btn btn-primary" id="btnScanSystemCVE">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cveInfoModal" tabindex="-1" role="dialog" aria-labelledby="cveInfoModalTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cveInfoModalTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="table-responsive-md">
+                <table class="table table-striped">
+                    <tbody>
+                        <tr>
+                            <td nowrap><strong>Affected package:</strong></td>
+                            <td><span id="spanModalCveAffectedPackage"></span></td>
+                        </tr>
+                        <tr>
+                            <td nowrap><strong>Package Version:</strong></td>
+                            <td><span id="spanModalCveAffectedVersion"></span></td>
+                        </tr>
+                        <tr>
+                            <td nowrap><strong>Severity:</strong></td>
+                            <td><span id="spanModalCveSeverity"></span></td>
+                        </tr>
+                        <tr>
+                            <td nowrap><strong>CVSS score (v3):</strong></td>
+                            <td><span id="spanModalCveCvss"></span></td>
+                        </tr>
+                        <tr>
+                            <td nowrap><strong>Description:</strong></td>
+                            <td><span id="spanModalCveDescription"></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -117,20 +185,21 @@
         modal.find('#btnUpdatePackage').data('package-id', package_id);
     });
 
-    $("#btnGetSystemInfo").click(function () {
-        $.ajax({
-            type: 'post',
-            url: '{% url "get_system_info" %}',
-            data: {
-                csrfmiddlewaretoken: '{{ csrf_token }}',
-                ssh_passphase: $('#id_ssh_passphase').val()
-            },
-            dataType: 'json',
-            success: function(response) {
-                if (response.error) toastr.error(response.message);
-                else toastr.success(response.message);
-            }
-        });
+    $('#cveInfoModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var cve_id = button.data('cve-id');
+        var cve_package_name = button.data('cve-affected-package');
+        var cve_affected_version = button.data('cve-affected-version');
+        var cve_severity = button.data('cve-severity');
+        var cve_cvss = button.data('cve-cvss');
+        var cve_description = button.data('cve-description');
+        var modal = $(this);
+        modal.find('#cveInfoModalTitle').text(cve_id);
+        modal.find('#spanModalCveAffectedPackage').text(cve_package_name);
+        modal.find('#spanModalCveAffectedVersion').text(cve_affected_version);
+        modal.find('#spanModalCveSeverity').text(cve_severity);
+        modal.find('#spanModalCveCvss').text(cve_cvss);
+        modal.find('#spanModalCveDescription').text(cve_description);
     });
     
     $("#btnUpdatePackage").click(function () {
@@ -139,7 +208,7 @@
             url: '{% url "update_package" %}',
             data: {
                 csrfmiddlewaretoken: '{{ csrf_token }}',
-                system_id: '{{ system_id }}',
+                system_id: '{{ system.id }}',
                 package_id: $(this).data('package-id'),
                 ssh_passphase: $('#id_ssh_passphase').val()
             },
@@ -158,7 +227,7 @@
             url: '{% url "update_all_packages" %}',
             data: {
                 csrfmiddlewaretoken: '{{ csrf_token }}',
-                system_id: '{{ system_id }}',
+                system_id: '{{ system.id }}',
                 ssh_passphase: $('#id_ssh_passphase').val()
             },
             dataType: 'json',
@@ -170,23 +239,43 @@
         $('#updateAllPackagesModal').modal('hide')
     });
 
+    $("#btnScanSystemCVE").click(function () {
+        $.ajax({
+            url: '{% url "scan_cve" system.id %}',
+            success: function(response) {
+                if (response.error) toastr.error(response.message);
+                else toastr.success(response.message);
+            }
+        });
+        $('#scanCVEModal').modal('hide')
+    });
+
     function refresh_page() {
         $.ajax({
             url: '{% url "get_outdated_packages_table" %}',
             data: {
-                system_id: '{{ system_id }}'
+                system_id: '{{ system.id }}'
             },
             success: function(response) {
-                $("#outdatedPackagesTableBody").html(response);
+                $("#outdatedPackagesTableWrapper").html(response);
             }
         });
         $.ajax({
             url: '{% url "get_installed_packages_table" %}',
             data: {
-                system_id: '{{ system_id }}'
+                system_id: '{{ system.id }}'
             },
             success: function(response) {
-                $("#installedPackagesTableBody").html(response);
+                $("#installedPackagesTableWrapper").html(response);
+            }
+        });
+        $.ajax({
+            url: '{% url "get_cve_info_table" %}',
+            data: {
+                system_id: '{{ system.id }}'
+            },
+            success: function(response) {
+                $("#cveInfoWrapper").html(response);
             }
         });
     }

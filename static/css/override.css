@@ -5,6 +5,13 @@
 .modal-lg {
     max-width: 60% !important;
 }
+.scroll {
+    max-height: 750px;
+    overflow-y: auto;
+}
+.small-margin-bottom {
+    margin-bottom: 25px;
+}
 
 /* Override toast icons */
 #toast-container > div {

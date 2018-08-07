@@ -1,7 +1,18 @@
-{% for package in installed_packages %}
-<tr>
-    <td class="text-center">{{ forloop.counter }}</td>
-    <td>{{ package.name }}</td>
-    <td>{{ package.current_version }}</td>
-</tr>
-{% endfor %}
+<table class="table table-sm table-striped">
+    <thead class="thead-dark">
+        <tr>
+            <th class="text-center">#</th>
+            <th>Package name</th>
+            <th>Current Version</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for package in installed_packages %}
+        <tr>
+            <td class="text-center">{{ forloop.counter }}</td>
+            <td>{{ package.name }}</td>
+            <td>{{ package.current_version }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

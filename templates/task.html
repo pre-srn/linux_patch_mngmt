@@ -1,53 +1,51 @@
 {% extends 'base.html' %} 
 
 {% block content %}
-<div class="table-responsive-md">
-    <table class="table">
-        <thead class="thead-inverse">
-            <tr>
-                <th>ID</th>
-                <th>Task</th>
-                <th nowrap>Initiated at</th>
-                <th>Status</th>
-                <th>Message</th>
-                <th nowrap>Finished at</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for task in tasks %}
-            <tr>
-                <td>
-                    <small>{{ task.task_id }}</small>
-                </td>
-                <td>
-                    {{ task.task_name }}
-                </td>
-                <td>
-                    <small>{{ task.started_at|date:'d/m/Y H:i:s' }}</small>
-                </td>
-                {% if task.get_task_status == "SUCCESS" %}
-                <td>
-                    <span class="badge badge-success">{{ task.get_task_status }}</span>
-                </td>
-                {% elif task.get_task_status == "FAILURE" %}
-                <td>
-                    <span class="badge badge-danger">{{ task.get_task_status }}</span>
-                </td>
-                {% else %}
-                <td>
-                    <span class="badge badge-info">{{ task.get_task_status }}</span>
-                </td>
-                {% endif %}
-                <td>
-                    <small>{{ task.get_task_result }}</small>
-                </td>
-                <td>
-                    <small>{{ task.get_task_date_done|date:'d/m/Y H:i:s' }}</small>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="card">
+    <div class="card-header d-flex">
+        <h4>Submitted Tasks</h4>
+        <button type="button" class="btn btn-secondary ml-auto" data-toggle="modal" data-target="#clearTasksModal">Clear completed tasks</button>
+    </div>
+    <div class="card-body scroll">
+        <div class="table-responsive-md">
+            <table class="table">
+                <thead class="thead-inverse">
+                    <tr>
+                        <th>ID</th>
+                        <th>Task</th>
+                        <th nowrap>Initiated at</th>
+                        <th>Status</th>
+                        <th>Message</th>
+                        <th nowrap>Finished at</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% include "ajax_templates/task_info_table.html" %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Clear tasks confirmation modal -->
+<div class="modal fade" id="clearTasksModal" tabindex="-1" role="dialog" aria-labelledby="clearTasksModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clearTasksModalLabel">Clearing all completed tasks</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Do you really want to clear all completed tasks?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                <a href="{% url 'clear_task' %}"><button type="button" class="btn btn-primary" id="btnScanSystemCVE">Yes</button></a>
+            </div>
+        </div>
+    </div>
 </div>
 
 {% include 'includes/task_notification.html' %}

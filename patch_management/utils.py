@@ -3,7 +3,7 @@ import tempfile
 import json
 
 from django.contrib.auth.models import User
-from .models import System, Package
+from .models import System, Package, CVE
 from fabric import Connection
 from invoke import UnexpectedExit
 
@@ -189,6 +189,45 @@ def save_package_update_result(system_id, installed_packages, available_updates)
         package_name = info[0]
         package_version = info[1]
         Package.objects.filter(name = package_name, system = cur_system).update(new_version = package_version)
+
+
+def get_cve_package_list(request_user_id, system_id):
+    result = {}
+    if system_id is None:
+        user = User.objects.get(pk=request_user_id)
+        systems = System.objects.filter(owner=user, connected=True, system_package_manager='yum')
+    else:
+        systems = System.objects.filter(pk=system_id)
+
+    for system in systems:
+        packages = Package.objects.filter(system=system, active=True)
+        package_list = []
+        for package in packages:
+            package_name_without_arch = package.name.split('.', 1)[0]
+            package_list.append(
+                [
+                    package.id,
+                    '{0}-{1}'.format(package_name_without_arch, package.current_version)
+                ])
+        result[system.id] = package_list
+    return result
+
+
+def save_cve_information(cve_info):
+    for system_id in cve_info.keys():
+        cur_system = System.objects.get(pk=system_id)
+        CVE.objects.filter(system=cur_system).delete()
+        cves = cve_info[system_id]
+        for cve in cves:
+            cur_package = Package.objects.get(pk=cve['package_id'])
+            CVE.objects.create(
+                cve_id = cve['cve_id'],
+                description = cve['description'],
+                cvss_v3 = cve['cvss3_score'],
+                severity = cve['severity'],
+                package = cur_package,
+                system = cur_system
+            )
 
 
 def create_tmp_file(input_file):
