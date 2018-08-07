@@ -8,7 +8,7 @@
     </div>
     <div class="card-body scroll" id="taskInfoTableWrapper">
         {% if total_tasks == 0 %}
-            <p class="blockquote">Currently, there are no submitted tasks.</p>
+            <p class="blockquote">Currently, there is no task information.</p>
         {% else %}
             {% include "ajax_templates/task_info_table.html" %}
         {% endif %}
