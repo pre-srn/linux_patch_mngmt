@@ -47,7 +47,7 @@ def manage_system(request, system_id):
     installed_packages = system.packages.filter(active=True).order_by(Lower('name'))
     outdated_packages = installed_packages.filter(new_version__isnull=False).order_by(Lower('name'))
     case_sql = '(case when severity="low" then 1 when severity="moderate" then 2 when severity="important" then 3 when severity="critical" then 4 end)'
-    cves = CVE.objects.filter(system=system).extra(select={'severity_order': case_sql}, order_by=['package__name', '-severity_order'])
+    cves = CVE.objects.filter(system=system, package__active=True).extra(select={'severity_order': case_sql}, order_by=['package__name', '-severity_order'])
     return render(request, 'system.html', 
         {'form': form, 'installed_packages': installed_packages, 'outdated_packages': outdated_packages,
         'system': system, 'cves': cves})
@@ -142,7 +142,7 @@ def ajax_get_system_info(request):
                                                                 request.user.id)
             Task.objects.create(task_id=celery_task_id, task_name="Get system information", initiated_by=request.user)
             response['error'] = False
-            response['message'] = 'Task initiated<p><small>[{0}]</small></p>'.format(celery_task_id)
+            response['message'] = 'Task initiated<p>Task: Get system information</p><p><small>[{0}]</small></p>'.format(celery_task_id)
         else:
             response['error'] = True
             response['message'] = 'Please input your SSH passphase first.'
@@ -228,7 +228,7 @@ def ajax_update_package(request):
                                 task_name='Update {0} on {1}'.format(package.name, system.hostname), 
                                 initiated_by=request.user)
             response['error'] = False
-            response['message'] = 'Task initiated<p><small>[{0}]</small></p>'.format(celery_task_id)
+            response['message'] = 'Task initiated<p>Task: Update {0} on {1}</p><p><small>[{2}]</small></p>'.format(package.name, system.hostname, celery_task_id)
         else:
             response['error'] = True
             response['message'] = 'Please input your SSH passphase first.'
@@ -258,7 +258,7 @@ def ajax_update_all_packages(request):
                                 task_name='Update all packages on {0}'.format(system.hostname), 
                                 initiated_by=request.user)
             response['error'] = False
-            response['message'] = 'Task initiated<p><small>[{0}]</small></p>'.format(celery_task_id)
+            response['message'] = 'Task initiated<p>Task: Update all packages on {0}</p><p><small>[{1}]</small></p>'.format(system.hostname, celery_task_id)
         else:
             response['error'] = True
             response['message'] = 'Please input your SSH passphase first.'
@@ -274,7 +274,7 @@ def ajax_scan_cve_all_systems(request):
     celery_task_id = celery_scan_cve.delay(request.user.id, None)
     Task.objects.create(task_id=celery_task_id, task_name="Scan CVE on all systems", initiated_by=request.user)
     response['error'] = False
-    response['message'] = 'Task initiated<p><small>[{0}]</small></p>'.format(celery_task_id)
+    response['message'] = 'Task initiated<p>Task: Scan CVE on all systems</p><p><small>[{0}]</small></p>'.format(celery_task_id)
     return JsonResponse(response)
 
 
@@ -287,7 +287,7 @@ def ajax_scan_cve_specific_system(request, system_id):
         celery_task_id = celery_scan_cve.delay(request.user.id, system.id)
         Task.objects.create(task_id=celery_task_id, task_name="Scan CVE on {0}".format(system.hostname), initiated_by=request.user)
         response['error'] = False
-        response['message'] = 'Task initiated<p><small>[{0}]</small></p>'.format(celery_task_id)
+        response['message'] = 'Task initiated<p>Task: Scan CVE on {0}</p><p><small>[{1}]</small></p>'.format(system.hostname, celery_task_id)
     else:
         response['error'] = True
         response['message'] = "This system doesn't support CVE scanning at the moment as it doesn't use RPM."

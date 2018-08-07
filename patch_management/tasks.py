@@ -111,7 +111,7 @@ def celery_scan_cve(request_user_id, input_system_id):
                     else:
                         cve_info_record['cvss3_score'] = None
                     cve_info_per_system.append(cve_info_record)
-        cve_info[system_id] = (cve_info_per_system)
+        cve_info[system_id] = cve_info_per_system
     
     save_cve_information(cve_info)
 

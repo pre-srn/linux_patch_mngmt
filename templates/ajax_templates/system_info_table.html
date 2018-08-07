@@ -22,7 +22,7 @@
                 </button>
             </td>
             <td class="align-middle">
-                <h6>
+                <h5>
                     {% if system.get_available_updates_count > 0 %}
                         {% if system.get_available_updates_count <= 10 %}
                         <span class="badge badge-secondary">
@@ -44,7 +44,7 @@
                         /
                         {{ system.get_cves_count}} CVEs
                     </span>
-                </h6>
+                </h5>
             </td>
             <td>
                 <a href="{% url 'manage_system' system.id %}" class="btn btn-dark">Manage</a>
