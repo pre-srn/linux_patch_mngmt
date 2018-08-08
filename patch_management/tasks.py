@@ -102,10 +102,10 @@ def celery_scan_cve(request_user_id, input_system_id):
             if (len(response.json()) > 0):
                 for cve in response.json():
                     cve_info_record = {}
-                    cve_info_record['package_id']   = package_id
-                    cve_info_record['cve_id']       = cve['CVE']
-                    cve_info_record['description']  = cve['bugzilla_description'].split(': ',1)[1].strip()
-                    cve_info_record['severity']     = cve['severity']
+                    cve_info_record['affected_package'] = package_name
+                    cve_info_record['cve_id']           = cve['CVE']
+                    cve_info_record['description']      = cve['bugzilla_description'].split(': ',1)[1].strip()
+                    cve_info_record['severity']         = cve['severity']
                     if 'cvss3_score' in cve:
                         cve_info_record['cvss3_score'] = cve['cvss3_score']
                     else:

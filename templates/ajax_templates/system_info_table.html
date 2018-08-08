@@ -23,7 +23,7 @@
             </td>
             <td class="align-middle">
                 <h5>
-                    {% if system.get_available_updates_count > 0 %}
+                    <!-- {% if system.get_available_updates_count > 0 %} -->
                         {% if system.get_available_updates_count <= 10 %}
                         <span class="badge badge-secondary">
                         {% elif system.get_available_updates_count <= 30 %}
@@ -31,7 +31,7 @@
                         {% else %}
                         <span class="badge badge-danger">
                         {% endif %}
-                    {% else %}
+                    <!-- {% else %}
                         {% if system.get_max_cve_severity == 'low' %}
                         <span class="badge badge-secondary">
                         {% elif system.get_max_cve_severity == 'moderate' %}
@@ -39,7 +39,7 @@
                         {% else %}
                         <span class="badge badge-danger">
                         {% endif %}
-                    {% endif %}
+                    {% endif %} -->
                         {{ system.get_available_updates_count}} updates available
                         /
                         {{ system.get_cves_count}} CVEs

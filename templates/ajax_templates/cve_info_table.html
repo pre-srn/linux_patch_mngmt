@@ -8,7 +8,6 @@
             <tr>
                 <th>#</th>
                 <th nowrap>Affected Package</th>
-                <th nowrap>Affected Version</th>
                 <th>CVE</th>
                 <th>Severity</th>
                 <th nowrap>CVSS score (v3)</th>
@@ -22,10 +21,7 @@
                     {{ forloop.counter }}
                 </td>
                 <td>
-                    {{ cve.package.name }}
-                </td>
-                <td>
-                    {{ cve.package.current_version }}
+                    {{ cve.affected_package }}
                 </td>
                 <td>
                     {{ cve.cve_id }}
@@ -54,8 +50,7 @@
                     <button type="button" class="btn btn-dark" 
                         data-toggle="modal" data-target="#cveInfoModal"
                         data-cve-id="{{ cve.cve_id }}"
-                        data-cve-affected-package="{{ cve.package.name }}"
-                        data-cve-affected-version="{{ cve.package.current_version }}"
+                        data-cve-affected-package="{{ cve.affected_package }}"
                         data-cve-severity="{{ cve.severity|capfirst }}"
                         data-cve-cvss="{{ cve.cvss_v3|default_if_none:'N/A' }}"
                         data-cve-description="{{ cve.description|capfirst }}">

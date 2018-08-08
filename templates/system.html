@@ -148,10 +148,6 @@
                             <td><span id="spanModalCveAffectedPackage"></span></td>
                         </tr>
                         <tr>
-                            <td nowrap><strong>Package Version:</strong></td>
-                            <td><span id="spanModalCveAffectedVersion"></span></td>
-                        </tr>
-                        <tr>
                             <td nowrap><strong>Severity:</strong></td>
                             <td><span id="spanModalCveSeverity"></span></td>
                         </tr>
@@ -188,15 +184,13 @@
     $('#cveInfoModal').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget);
         var cve_id = button.data('cve-id');
-        var cve_package_name = button.data('cve-affected-package');
-        var cve_affected_version = button.data('cve-affected-version');
+        var cve_affected_package = button.data('cve-affected-package');
         var cve_severity = button.data('cve-severity');
         var cve_cvss = button.data('cve-cvss');
         var cve_description = button.data('cve-description');
         var modal = $(this);
         modal.find('#cveInfoModalTitle').text(cve_id);
-        modal.find('#spanModalCveAffectedPackage').text(cve_package_name);
-        modal.find('#spanModalCveAffectedVersion').text(cve_affected_version);
+        modal.find('#spanModalCveAffectedPackage').text(cve_affected_package);
         modal.find('#spanModalCveSeverity').text(cve_severity);
         modal.find('#spanModalCveCvss').text(cve_cvss);
         modal.find('#spanModalCveDescription').text(cve_description);

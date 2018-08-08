@@ -219,13 +219,12 @@ def save_cve_information(cve_info):
         CVE.objects.filter(system=cur_system).delete()
         cves = cve_info[system_id]
         for cve in cves:
-            cur_package = Package.objects.get(pk=cve['package_id'])
             CVE.objects.create(
                 cve_id = cve['cve_id'],
                 description = cve['description'],
                 cvss_v3 = cve['cvss3_score'],
                 severity = cve['severity'],
-                package = cur_package,
+                affected_package = cve['affected_package'],
                 system = cur_system
             )
 

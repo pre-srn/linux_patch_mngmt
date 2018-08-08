@@ -11,7 +11,7 @@ from django.db.models.functions import Lower
 from django_celery_results.models import TaskResult
 
 from .decorators import ssh_setup_required
-from .models import System, SSHProfile, Package, Task
+from .models import System, SSHProfile, Package, Task, CVE
 from .forms import SetupSSHForm, SSHPassphaseSubmitForm, UpdatePackageAjaxSubmitForm, UpdateAllPackagesAjaxSubmitForm
 from .utils import connect_ssh, is_puppet_running, create_tmp_file, delete_tmp_file
 from .tasks import *
@@ -47,7 +47,7 @@ def manage_system(request, system_id):
     installed_packages = system.packages.filter(active=True).order_by(Lower('name'))
     outdated_packages = installed_packages.filter(new_version__isnull=False).order_by(Lower('name'))
     case_sql = '(case when severity="low" then 1 when severity="moderate" then 2 when severity="important" then 3 when severity="critical" then 4 end)'
-    cves = CVE.objects.filter(system=system, package__active=True).extra(select={'severity_order': case_sql}, order_by=['package__name', '-severity_order'])
+    cves = CVE.objects.filter(system=system).extra(select={'severity_order': case_sql}, order_by=['affected_package', '-severity_order'])
     return render(request, 'system.html', 
         {'form': form, 'installed_packages': installed_packages, 'outdated_packages': outdated_packages,
         'system': system, 'cves': cves})
@@ -189,7 +189,7 @@ def ajax_get_cve_info_table(request):
         system_id = int(request.GET.get('system_id', None))
         system = get_object_or_404(System.objects.filter(owner=request.user, connected=True), pk=system_id)
         case_sql = '(case when severity="low" then 1 when severity="moderate" then 2 when severity="important" then 3 when severity="critical" then 4 end)'
-        cves = CVE.objects.filter(system=system).extra(select={'severity_order': case_sql}, order_by=['package__name', 'severity_order'])
+        cves = CVE.objects.filter(system=system).extra(select={'severity_order': case_sql}, order_by=['affected_package', '-severity_order'])
         return render(request, 'ajax_templates/cve_info_table.html', {'system': system, 'cves': cves})
     else:
         return redirect('home')
