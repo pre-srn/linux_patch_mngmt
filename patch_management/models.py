@@ -36,13 +36,13 @@ class System(models.Model):
     def get_available_updates_count(self):
         return Package.objects.filter(system=self, active=True, new_version__isnull=False).count()
 
-    def get_max_cve_severity(self):
-        case_sql = '(case when severity="low" then 1 when severity="moderate" then 2 when severity="important" then 3 when severity="critical" then 4 end)'
-        cve = CVE.objects.filter(system=self).extra(select={'severity_order': case_sql}, order_by=['-severity_order'])
-        if not cve:
-            return None
-        else:
-            return cve[0].severity
+    # def get_max_cve_severity(self):
+    #     case_sql = '(case when severity="low" then 1 when severity="moderate" then 2 when severity="important" then 3 when severity="critical" then 4 end)'
+    #     cve = CVE.objects.filter(system=self).extra(select={'severity_order': case_sql}, order_by=['-severity_order'])
+    #     if not cve:
+    #         return None
+    #     else:
+    #         return cve[0].severity
 
     def get_cves_count(self):
         return CVE.objects.filter(system=self).count()

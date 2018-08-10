@@ -15,7 +15,7 @@
     </div>
     <div class="card-body scroll" id="systemInfoTableWrapper">
         {% if total_systems == 0 %}
-            <p class="blockquote">No Puppet/Mcollective system connected.</p>
+            <p class="blockquote">No Puppet/Mcollective system information.</p>
             <p><em>Please initial a task to get system information first.</em></p>
         {% else %}
             {% include "ajax_templates/system_info_table.html" %}
