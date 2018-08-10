@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 
 from ..views import home, register
+from ..models import SSHProfile
 
 class RegisterTests(TestCase):
     '''
@@ -22,6 +23,7 @@ class RegisterTests(TestCase):
     def test_contains_form(self):
         form = self.response.context.get('form')
         self.assertIsInstance(form, UserCreationForm)
+
 
 class SuccessfulRegisterTests(TestCase):
     def setUp(self):
@@ -52,7 +54,7 @@ class SuccessfulRegisterTests(TestCase):
         self.assertTrue(user.is_authenticated)
 
 
-class InvalidSignUpTests(TestCase):
+class InvalidRegisterTests(TestCase):
     def setUp(self):
         url = reverse('register')
         # Submitting an empty form
@@ -174,3 +176,76 @@ class LoginRequiredTests(TestCase):
         url = reverse('check_task_status')
         response = self.client.get(url)
         self.assertRedirects(response, '{login_url}?next={url}'.format(login_url=self.login_url, url=url))
+
+
+class PasswordChangeTestCase(TestCase):
+    def setUp(self, password_change_form_data={}):
+        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='old_password')
+        self.client.login(username='johndoe', password='old_password')
+        # Setup (mocked up) SSH profile
+        ssh_setup_url = reverse('setup_ssh')
+        sshProfile = SSHProfile.objects.get(pk=self.user.id)
+        sshProfile.ssh_server_address = '127.0.0.1'
+        sshProfile.ssh_username = 'test_user'
+        sshProfile.save()
+
+        self.url = reverse('password_change')
+        self.response = self.client.post(self.url, password_change_form_data)
+
+
+class SuccessfulPasswordChangeTests(PasswordChangeTestCase):
+    def setUp(self):
+        super().setUp({
+            'old_password': 'old_password',
+            'new_password1': 'new_password',
+            'new_password2': 'new_password',
+        })
+
+    def test_redirection(self):
+        '''
+        A valid form submission should redirect the user
+        '''
+        self.assertRedirects(self.response, reverse('password_change_done'), status_code=302, target_status_code=302)
+        home_url = reverse('home')
+        home_response = self.client.get(home_url)
+        self.assertContains(home_response, 'Your password has been successfully updated.')
+
+    def test_password_changed(self):
+        '''
+        refresh the user instance from database to get the new password
+        hash updated by the change password view.
+        '''
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('new_password'))
+
+    def test_user_authentication(self):
+        '''
+        Create a new request to an arbitrary page.
+        The resulting response should now have an `user` to its context, after a successful sign up.
+        '''
+        response = self.client.get(reverse('home'))
+        user = response.context.get('user')
+        self.assertTrue(user.is_authenticated)
+
+
+class InvalidPasswordChangeTests(PasswordChangeTestCase):
+    def setUp(self):
+        super().setUp({})
+
+    def test_status_code(self):
+        '''
+        An invalid form submission should return to the same page
+        '''
+        self.assertEquals(self.response.status_code, 200)
+
+    def test_form_errors(self):
+        form = self.response.context.get('form')
+        self.assertTrue(form.errors)
+
+    def test_didnt_change_password(self):
+        '''
+        refresh the user instance from the database to make
+        sure we have the latest data.
+        '''
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('old_password'))

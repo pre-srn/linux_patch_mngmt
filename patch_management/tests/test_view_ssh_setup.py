@@ -56,7 +56,6 @@ class SSHConfigTests(TestCase):
         # Setup an account
         self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
         self.client.login(username='johndoe', password='test1234')
-
         url = reverse('config_ssh')
         self.response = self.client.get(url)
 

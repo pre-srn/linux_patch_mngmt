@@ -6,7 +6,8 @@ from django.contrib.auth.models import User
 from ..forms import SSHPassphaseSubmitForm
 from ..models import SSHProfile, System, Package, CVE
 
-class HomeViewTests(TestCase):
+
+class HomeViewTestCase(TestCase):
     def setUp(self):
         # Setup an account
         self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
@@ -20,6 +21,11 @@ class HomeViewTests(TestCase):
 
         url = reverse('home')
         self.response = self.client.get(url)
+
+
+class HomeViewTests(HomeViewTestCase):
+    def setUp(self):
+        super().setUp()
 
     def test_home_csrf(self):
         self.assertContains(self.response, 'csrfmiddlewaretoken')
@@ -32,37 +38,18 @@ class HomeViewTests(TestCase):
         self.assertEquals(self.response.status_code, 200)
 
 
-class HomeViewNoDataTests(TestCase):
+class HomeViewNoDataTests(HomeViewTestCase):
     def setUp(self):
-        # Setup an account
-        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
-        self.client.login(username='johndoe', password='test1234')
-        # Setup (mocked up) SSH profile
-        ssh_setup_url = reverse('setup_ssh')
-        sshProfile = SSHProfile.objects.get(pk=self.user.id)
-        sshProfile.ssh_server_address = '127.0.0.1'
-        sshProfile.ssh_username = 'test_user'
-        sshProfile.save()
-
-        url = reverse('home')
-        self.response = self.client.get(url)
+        super().setUp()
 
     def test_home_view_message(self):
         self.assertContains(self.response, 'No Puppet/Mcollective system information.', 1)
         self.assertContains(self.response, 'Please initial a task to get system information first.', 1)
 
 
-class HomeViewWithDataTests(TestCase):
+class HomeViewWithDataTests(HomeViewTestCase):
     def setUp(self):
-        # Setup an account
-        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
-        self.client.login(username='johndoe', password='test1234')
-        # Setup SSH profile
-        ssh_setup_url = reverse('setup_ssh')
-        sshProfile = SSHProfile.objects.get(pk=self.user.id)
-        sshProfile.ssh_server_address = '127.0.0.1'
-        sshProfile.ssh_username = 'test_user'
-        sshProfile.save()
+        super().setUp()
 
         # Setup System information
         self.system1 = System.objects.create(
@@ -168,8 +155,8 @@ class HomeViewWithDataTests(TestCase):
         self.assertEquals(response.status_code, 404)
 
 
-class ManageSystemViewTests(TestCase):
-    def setUp(self):
+class ManageSystemViewTestCase(TestCase):
+    def setUp(self, total_mocked_package):
         # Setup an account
         self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
         self.client.login(username='johndoe', password='test1234')
@@ -191,11 +178,16 @@ class ManageSystemViewTests(TestCase):
             system_package_manager= 'OS1_package_manager'
         )
 
-        for i in range(35):
+        for i in range(total_mocked_package):
             Package.objects.create(name='package{0}'.format(i+1), current_version='1', new_version=None, active=True, system=self.system1)
 
         url = reverse('manage_system', kwargs={'system_id': self.system1.id})
         self.response = self.client.get(url)
+
+
+class ManageSystemViewTests(ManageSystemViewTestCase):
+    def setUp(self):
+        super().setUp(total_mocked_package=35)
 
     def test_manage_system_csrf(self):
         self.assertContains(self.response, 'csrfmiddlewaretoken')
@@ -208,34 +200,9 @@ class ManageSystemViewTests(TestCase):
         self.assertEquals(self.response.status_code, 200)
 
 
-class ManageSystemViewNoDataTests(TestCase):
+class ManageSystemViewNoDataTests(ManageSystemViewTestCase):
     def setUp(self):
-        # Setup an account
-        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
-        self.client.login(username='johndoe', password='test1234')
-        # Setup SSH profile
-        ssh_setup_url = reverse('setup_ssh')
-        sshProfile = SSHProfile.objects.get(pk=self.user.id)
-        sshProfile.ssh_server_address = '127.0.0.1'
-        sshProfile.ssh_username = 'test_user'
-        sshProfile.save()
-
-        # Setup System information
-        self.system1 = System.objects.create(
-            hostname='test1.server', 
-            owner=self.user,
-            connected=True,
-            system_os_name= 'OS1_name',
-            system_os_version= 'OS1_version',
-            system_kernel= 'OS1_kernel_version',
-            system_package_manager= 'OS1_package_manager'
-        )
-
-        for i in range(35):
-            Package.objects.create(name='package{0}'.format(i+1), current_version='1', new_version=None, active=True, system=self.system1)
-
-        url = reverse('manage_system', kwargs={'system_id': self.system1.id})
-        self.response = self.client.get(url)
+        super().setUp(total_mocked_package=35)
 
     def test_manage_system_view_with_no_updates_message(self):
         self.assertContains(self.response, 'All packages are up-to-date.')
@@ -244,29 +211,15 @@ class ManageSystemViewNoDataTests(TestCase):
         self.assertContains(self.response, 'No CVE information found.')
         self.assertContains(self.response, 'Please scan/re-scan the system to analyse CVE.')
 
+    def test_manage_system_view_contains_install_packages_list(self):
+        self.assertContains(self.response, '<td>1<', 35)
+        for i in range(35):
+            self.assertContains(self.response, '<td>package{0}<'.format(i+1), 1)
 
-class ManageSystemViewWithUpdatesTests(TestCase):
+
+class ManageSystemViewWithUpdatesTests(ManageSystemViewTestCase):
     def setUp(self):
-        # Setup an account
-        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
-        self.client.login(username='johndoe', password='test1234')
-        # Setup SSH profile
-        ssh_setup_url = reverse('setup_ssh')
-        sshProfile = SSHProfile.objects.get(pk=self.user.id)
-        sshProfile.ssh_server_address = '127.0.0.1'
-        sshProfile.ssh_username = 'test_user'
-        sshProfile.save()
-
-        # Setup System information
-        self.system1 = System.objects.create(
-            hostname='test1.server', 
-            owner=self.user,
-            connected=True,
-            system_os_name= 'OS1_name',
-            system_os_version= 'OS1_version',
-            system_kernel= 'OS1_kernel_version',
-            system_package_manager= 'OS1_package_manager'
-        )
+        super().setUp(total_mocked_package=0)
 
         for i in range(5):
             Package.objects.create(name='package{0}'.format(i+1), current_version='1', new_version='2', active=True, system=self.system1)
@@ -278,32 +231,11 @@ class ManageSystemViewWithUpdatesTests(TestCase):
             self.assertContains(response, 'package{0}'.format(i+1), 3)
 
 
-class ManageSystemViewWithCveInfoTests(TestCase):
+class ManageSystemViewWithCveInfoTests(ManageSystemViewTestCase):
     def setUp(self):
-        # Setup an account
-        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
-        self.client.login(username='johndoe', password='test1234')
-        # Setup SSH profile
-        ssh_setup_url = reverse('setup_ssh')
-        sshProfile = SSHProfile.objects.get(pk=self.user.id)
-        sshProfile.ssh_server_address = '127.0.0.1'
-        sshProfile.ssh_username = 'test_user'
-        sshProfile.save()
-
-        # Setup System information
-        self.system1 = System.objects.create(
-            hostname='test1.server', 
-            owner=self.user,
-            connected=True,
-            system_os_name= 'OS1_name',
-            system_os_version= 'OS1_version',
-            system_kernel= 'OS1_kernel_version',
-            system_package_manager= 'OS1_package_manager'
-        )
-
-        for i in range(35):
-            Package.objects.create(name='package{0}'.format(i+1), current_version='1', new_version=None, active=True, system=self.system1)
-
+        super().setUp(total_mocked_package=35)
+        
+        # Setup CVE info
         for i in range(20):
             if i < 5:
                 CVE.objects.create(cve_id='cve-{0}-{0}'.format(i+1), description='desc_test', cvss_v3=1.23,

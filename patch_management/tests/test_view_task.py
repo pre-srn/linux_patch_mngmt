@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 
 from ..models import SSHProfile, Task, TaskResult
 
-class TaskViewTests(TestCase):
+class TaskViewTestCase(TestCase):
     def setUp(self):
         # Setup an account
         self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
@@ -19,40 +19,26 @@ class TaskViewTests(TestCase):
 
         url = reverse('list_task')
         self.response = self.client.get(url)
+
+
+class TaskViewTests(TaskViewTestCase):
+    def setUp(self):
+        super().setUp()
 
     def test_task_view_status_code(self):
         self.assertEquals(self.response.status_code, 200)
 
-class TaskViewNoDataTests(TestCase):
+class TaskViewNoDataTests(TaskViewTestCase):
     def setUp(self):
-        # Setup an account
-        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
-        self.client.login(username='johndoe', password='test1234')
-        # Setup (mocked up) SSH profile
-        ssh_setup_url = reverse('setup_ssh')
-        sshProfile = SSHProfile.objects.get(pk=self.user.id)
-        sshProfile.ssh_server_address = '127.0.0.1'
-        sshProfile.ssh_username = 'test_user'
-        sshProfile.save()
-
-        url = reverse('list_task')
-        self.response = self.client.get(url)
+        super().setUp()
 
     def test_task_view_no_data_message(self):
         self.assertContains(self.response, 'Currently, there is no task information.')
 
 
-class TaskViewWithDataTests(TestCase):
+class TaskViewWithDataTests(TaskViewTestCase):
     def setUp(self):
-        # Setup an account
-        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
-        self.client.login(username='johndoe', password='test1234')
-        # Setup (mocked up) SSH profile
-        ssh_setup_url = reverse('setup_ssh')
-        sshProfile = SSHProfile.objects.get(pk=self.user.id)
-        sshProfile.ssh_server_address = '127.0.0.1'
-        sshProfile.ssh_username = 'test_user'
-        sshProfile.save()
+        super().setUp()
 
         for i in range(5):
             Task.objects.create(task_id='task_id_{0}'.format(i+1), task_name='task_name_{0}'.format(i+1), initiated_by=self.user)
@@ -83,6 +69,8 @@ class TaskViewWithDataTests(TestCase):
         TaskResult.objects.create(task_id='task_id_2', status='FAILURE', result={'exc_message':['task_id_2_failure']})
         Task.objects.filter(task_id='task_id_1').update(is_notified=True)
         Task.objects.filter(task_id='task_id_2').update(is_notified=True)
+
+        # Clearing tasks
         clear_task_url = reverse('clear_task')
         self.client.get(clear_task_url)
         list_task_url = reverse('list_task')

@@ -5,14 +5,20 @@ from ..utils import *
 
 class TestSSHProcesses(TestCase):
     def setUp(self):
-        self.connected_systems = ['puppet-master.server', 'managed.server']
-        self.system_os_name    = {'puppet-master.server': 'CentOS Linux 7 (Core)', 
-                                  'managed.server'      : 'Ubuntu 16.04.4 LTS'}
-        self.system_os_version = {'puppet-master.server': '7 (Core)', 
-                                  'managed.server'      : '16.04.4 LTS (Xenial Xerus)'}
-        self.system_kernel     = {'puppet-master.server': 'Linux 3.10.0-862.2.3.el7.x86_64 x86_64', 
-                                  'managed.server'      : 'Linux 4.4.0-127-generic x86_64'}
-        self.installed_packages = {
+        self.expected_connected_systems = ['puppet-master.server', 'managed.server']
+        self.expected_system_os_name = {
+            'puppet-master.server': 'CentOS Linux 7 (Core)', 
+            'managed.server'      : 'Ubuntu 16.04.4 LTS'
+            }
+        self.expected_system_os_version = {
+            'puppet-master.server': '7 (Core)',
+            'managed.server'      : '16.04.4 LTS (Xenial Xerus)'
+            }
+        self.expected_system_kernel = {
+            'puppet-master.server': 'Linux 3.10.0-862.2.3.el7.x86_64 x86_64', 
+            'managed.server'      : 'Linux 4.4.0-127-generic x86_64'
+            }
+        self.expected_installed_packages = {
             'puppet-master.server': [
                                     ['app-1', '4.01-17.el7'],
                                     ['app-2', '7.4p1-16.el7'],
@@ -25,12 +31,12 @@ class TestSSHProcesses(TestCase):
                                     ['app-4', '1:9.9p2-4ubuntu2.4']
                                     ]
             }
-        self.available_updates = {
+        self.expected_available_updates = {
             'puppet-master.server': [['app-1', '1:9.9.9']],
             'managed.server':       [['app-2', '1:9.9.9'], 
                                      ['app-3', '1:9.1.2']]
             }
-        self.package_managers = {
+        self.expected_package_managers = {
             'puppet-master.server': 'yum',
             'managed.server':       'apt'
             }
@@ -46,7 +52,7 @@ managed.server                           time=119.36 ms\n\
 2 replies max: 124.04 min: 119.36 avg: 121.70\n')
 
         connected_systems = process_ssh_res_connected_systems(ssh_result)
-        self.assertEquals(connected_systems, self.connected_systems)
+        self.assertEquals(connected_systems, self.expected_connected_systems)
 
     def test_process_ssh_res_sys_info(self):
         ssh_result = SSHResult(connection=None, 
@@ -95,10 +101,10 @@ Linux 3.10.0-862.2.3.el7.x86_64 x86_64\n\
 \n\
 Finished processing ?[32m2?[0m / ?[32m2?[0m hosts in 129.34 ms\n\
 ')
-        system_os_name, system_os_version, system_kernel = process_ssh_res_sys_info(ssh_result, self.connected_systems)
-        self.assertDictEqual(system_os_name, self.system_os_name)
-        self.assertDictEqual(system_os_version, self.system_os_version)
-        self.assertDictEqual(system_kernel, self.system_kernel)
+        system_os_name, system_os_version, system_kernel = process_ssh_res_sys_info(ssh_result, self.expected_connected_systems)
+        self.assertDictEqual(system_os_name, self.expected_system_os_name)
+        self.assertDictEqual(system_os_version, self.expected_system_os_version)
+        self.assertDictEqual(system_kernel, self.expected_system_kernel)
 
     def test_process_ssh_res_installed_packages(self):
         ssh_result = SSHResult(connection=None,
@@ -123,8 +129,8 @@ app-3 1.10.2-13.el7\n\
 \n\
 Finished processing ?[32m2?[0m / ?[32m2?[0m hosts in 1166.34 ms\n\
 ')
-        installed_packages = process_ssh_res_installed_packages(ssh_result, self.connected_systems)
-        self.assertDictEqual(installed_packages, self.installed_packages)
+        installed_packages = process_ssh_res_installed_packages(ssh_result, self.expected_connected_systems)
+        self.assertDictEqual(installed_packages, self.expected_installed_packages)
         
     def test_process_ssh_res_available_updates(self):
         ssh_result = SSHResult(connection=None,
@@ -158,6 +164,6 @@ puppet-master.server\n\
 \n\
 Finished processing ?[32m2?[0m / ?[32m2?[0m hosts in 3142.49 ms\n\
 ')
-        available_updates, package_managers = process_ssh_res_available_updates(ssh_result, self.connected_systems)
-        self.assertDictEqual(available_updates, self.available_updates)
-        self.assertDictEqual(package_managers, self.package_managers)
+        available_updates, package_managers = process_ssh_res_available_updates(ssh_result, self.expected_connected_systems)
+        self.assertDictEqual(available_updates, self.expected_available_updates)
+        self.assertDictEqual(package_managers, self.expected_package_managers)
