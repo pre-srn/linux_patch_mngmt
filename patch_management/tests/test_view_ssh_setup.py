@@ -1,8 +1,9 @@
 from django.test import TestCase
 from django.urls import reverse, resolve
+from django.contrib.auth.models import User
 
+from ..models import SSHProfile
 from ..forms import SetupSSHForm
-from ..views import setup_ssh
 
 class SSHSetupTests(TestCase):
     '''
@@ -10,22 +11,13 @@ class SSHSetupTests(TestCase):
     '''
     def setUp(self):
         # Setup an account
-        register_url = reverse('register')
-        register_data = {
-            'username': 'johndoe',
-            'password1': 'test1234',
-            'password2': 'test1234'
-        }
-        self.client.post(register_url, register_data)
+        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
+        self.client.login(username='johndoe', password='test1234')
         url = reverse('setup_ssh')
         self.response = self.client.get(url)
 
-    def test_SSH_setup_status_code(self):
+    def test_ssh_setup_status_code(self):
         self.assertEquals(self.response.status_code, 200)
-
-    def test_SSH_setup_url_resolves_signup_view(self):
-        view = resolve('/account/setup/ssh/')
-        self.assertEquals(view.func, setup_ssh)
 
     def test_csrf(self):
         self.assertContains(self.response, 'csrfmiddlewaretoken')
@@ -34,19 +26,79 @@ class SSHSetupTests(TestCase):
         form = self.response.context.get('form')
         self.assertIsInstance(form, SetupSSHForm)
 
+    def test_contains_setup_message(self):
+        self.assertContains(self.response, 'Welcome')
+        self.assertContains(self.response, 'Please setup an SSH configuration to your Puppet master server')
+
+
+class SSHSetupInvalidFormTests(TestCase):
+    def setUp(self):
+        # Setup an account
+        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
+        self.client.login(username='johndoe', password='test1234')
+        # Submit an empty form
+        url = reverse('setup_ssh')
+        self.response = self.client.post(url, {})
+
+    def test_form_errors(self):
+        form = self.response.context.get('form')
+        self.assertTrue(form.errors)
+
+    def test_ssh_profile_hasnt_been_set(self):
+        self.assertEqual(SSHProfile.objects.get(user=self.user).ssh_server_address, '')
+    
+
+class SSHConfigTests(TestCase):
+    '''
+    Testing/verifying the SSH config form
+    '''
+    def setUp(self):
+        # Setup an account
+        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
+        self.client.login(username='johndoe', password='test1234')
+
+        url = reverse('config_ssh')
+        self.response = self.client.get(url)
+
+    def test_ssh_setup_status_code(self):
+        self.assertEquals(self.response.status_code, 200)
+
+    def test_csrf(self):
+        self.assertContains(self.response, 'csrfmiddlewaretoken')
+
+    def test_contains_form(self):
+        form = self.response.context.get('form')
+        self.assertIsInstance(form, SetupSSHForm)
+
+    def test_contains_setup_message(self):
+        self.assertContains(self.response, 'SSH configuration')
+
+
+class SSHConfigInvalidFormTests(TestCase):
+    def setUp(self):
+        # Setup an account
+        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
+        self.client.login(username='johndoe', password='test1234')
+        # Submit an empty form
+        url = reverse('config_ssh')
+        self.response = self.client.post(url, {})
+
+    def test_form_errors(self):
+        form = self.response.context.get('form')
+        self.assertTrue(form.errors)
+
+    def test_ssh_profile_hasnt_been_set(self):
+        self.assertEqual(SSHProfile.objects.get(user=self.user).ssh_server_address, '')
+    
+
 class SSHSetupRequiredTests(TestCase):
     '''
     Testing SSH setup required on each page for a new registered user
     '''
     def setUp(self):
         # Setup an account
-        register_url = reverse('register')
-        register_data = {
-            'username': 'johndoe',
-            'password1': 'test1234',
-            'password2': 'test1234'
-        }
-        self.client.post(register_url, register_data)
+        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
+        self.client.login(username='johndoe', password='test1234')
         self.setup_ssh_url = reverse('setup_ssh')
 
     def test_home_url_ssh_setup_required(self):

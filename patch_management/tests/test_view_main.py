@@ -3,55 +3,63 @@ from django.test import TestCase
 from django.urls import reverse, resolve
 from django.contrib.auth.models import User
 
+from ..forms import SSHPassphaseSubmitForm
 from ..models import SSHProfile, System, Package, CVE
 
-class HomeViewNoDataTests(TestCase):
-
+class HomeViewTests(TestCase):
     def setUp(self):
         # Setup an account
-        register_url = reverse('register')
-        register_data = {
-            'username': 'johndoe',
-            'password1': 'test1234',
-            'password2': 'test1234'
-        }
-        self.client.post(register_url, register_data)
+        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
+        self.client.login(username='johndoe', password='test1234')
         # Setup (mocked up) SSH profile
         ssh_setup_url = reverse('setup_ssh')
-        user = self.client.get(ssh_setup_url).context.get('user')
-        sshProfile = SSHProfile.objects.get(pk=user.id)
+        sshProfile = SSHProfile.objects.get(pk=self.user.id)
         sshProfile.ssh_server_address = '127.0.0.1'
         sshProfile.ssh_username = 'test_user'
         sshProfile.save()
-        
-    def test_home_view_status_code(self):
+
         url = reverse('home')
-        response = self.client.get(url)
-        self.assertEquals(response.status_code, 200)
+        self.response = self.client.get(url)
+
+    def test_home_csrf(self):
+        self.assertContains(self.response, 'csrfmiddlewaretoken')
+
+    def test_home_contains_form(self):
+        form = self.response.context.get('form')
+        self.assertIsInstance(form, SSHPassphaseSubmitForm)
+
+    def test_home_view_status_code(self):
+        self.assertEquals(self.response.status_code, 200)
+
+
+class HomeViewNoDataTests(TestCase):
+    def setUp(self):
+        # Setup an account
+        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
+        self.client.login(username='johndoe', password='test1234')
+        # Setup (mocked up) SSH profile
+        ssh_setup_url = reverse('setup_ssh')
+        sshProfile = SSHProfile.objects.get(pk=self.user.id)
+        sshProfile.ssh_server_address = '127.0.0.1'
+        sshProfile.ssh_username = 'test_user'
+        sshProfile.save()
+
+        url = reverse('home')
+        self.response = self.client.get(url)
 
     def test_home_view_message(self):
-        url = reverse('home')
-        response = self.client.get(url)
-        self.assertContains(response, 'No Puppet/Mcollective system information.', 1)
-        self.assertContains(response, 'Please initial a task to get system information first.', 1)
+        self.assertContains(self.response, 'No Puppet/Mcollective system information.', 1)
+        self.assertContains(self.response, 'Please initial a task to get system information first.', 1)
 
 
 class HomeViewWithDataTests(TestCase):
-
     def setUp(self):
         # Setup an account
-        register_url = reverse('register')
-        register_data = {
-            'username': 'johndoe',
-            'password1': 'test1234',
-            'password2': 'test1234'
-        }
-        self.client.post(register_url, register_data)
-        
+        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
+        self.client.login(username='johndoe', password='test1234')
         # Setup SSH profile
         ssh_setup_url = reverse('setup_ssh')
-        user = self.client.get(ssh_setup_url).context.get('user')
-        sshProfile = SSHProfile.objects.get(pk=user.id)
+        sshProfile = SSHProfile.objects.get(pk=self.user.id)
         sshProfile.ssh_server_address = '127.0.0.1'
         sshProfile.ssh_username = 'test_user'
         sshProfile.save()
@@ -59,7 +67,7 @@ class HomeViewWithDataTests(TestCase):
         # Setup System information
         self.system1 = System.objects.create(
             hostname='test1.server', 
-            owner=user,
+            owner=self.user,
             connected=True,
             system_os_name= 'OS1_name',
             system_os_version= 'OS1_version',
@@ -68,7 +76,7 @@ class HomeViewWithDataTests(TestCase):
         )
         self.system2 = System.objects.create(
             hostname='test2.server', 
-            owner=user,
+            owner=self.user,
             connected=False,
             system_os_name= 'OS2_name',
             system_os_version= 'OS2_version',
@@ -160,21 +168,14 @@ class HomeViewWithDataTests(TestCase):
         self.assertEquals(response.status_code, 404)
 
 
-class ManageSystemViewWithUpdates(TestCase):
+class ManageSystemViewTests(TestCase):
     def setUp(self):
         # Setup an account
-        register_url = reverse('register')
-        register_data = {
-            'username': 'johndoe',
-            'password1': 'test1234',
-            'password2': 'test1234'
-        }
-        self.client.post(register_url, register_data)
-        
+        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
+        self.client.login(username='johndoe', password='test1234')
         # Setup SSH profile
         ssh_setup_url = reverse('setup_ssh')
-        user = self.client.get(ssh_setup_url).context.get('user')
-        sshProfile = SSHProfile.objects.get(pk=user.id)
+        sshProfile = SSHProfile.objects.get(pk=self.user.id)
         sshProfile.ssh_server_address = '127.0.0.1'
         sshProfile.ssh_username = 'test_user'
         sshProfile.save()
@@ -182,7 +183,7 @@ class ManageSystemViewWithUpdates(TestCase):
         # Setup System information
         self.system1 = System.objects.create(
             hostname='test1.server', 
-            owner=user,
+            owner=self.user,
             connected=True,
             system_os_name= 'OS1_name',
             system_os_version= 'OS1_version',
@@ -192,34 +193,29 @@ class ManageSystemViewWithUpdates(TestCase):
 
         for i in range(35):
             Package.objects.create(name='package{0}'.format(i+1), current_version='1', new_version=None, active=True, system=self.system1)
-        
-        def test_manage_system_view_with_no_updates(self):
-            url = reverse('manage_system', kwargs={'system_id': self.system1.id})
-            response = self.client.get(url)
-            self.assertContains(response, 'All packages are up-to-date.')
 
-        def test_manage_system_view_with_no_cve_info(self):
-            url = reverse('manage_system', kwargs={'system_id': self.system1.id})
-            response = self.client.get(url)
-            self.assertContains(response, 'No CVE information found.')
-            self.assertContains(response, 'Please scan/re-scan the system to analyse CVE.')
+        url = reverse('manage_system', kwargs={'system_id': self.system1.id})
+        self.response = self.client.get(url)
+
+    def test_manage_system_csrf(self):
+        self.assertContains(self.response, 'csrfmiddlewaretoken')
+
+    def test_manage_system_contains_form(self):
+        form = self.response.context.get('form')
+        self.assertIsInstance(form, SSHPassphaseSubmitForm) 
+
+    def test_manage_system_status_code(self):
+        self.assertEquals(self.response.status_code, 200)
 
 
-class ManageSystemViewWithUpdates(TestCase):
+class ManageSystemViewNoDataTests(TestCase):
     def setUp(self):
         # Setup an account
-        register_url = reverse('register')
-        register_data = {
-            'username': 'johndoe',
-            'password1': 'test1234',
-            'password2': 'test1234'
-        }
-        self.client.post(register_url, register_data)
-        
+        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
+        self.client.login(username='johndoe', password='test1234')
         # Setup SSH profile
         ssh_setup_url = reverse('setup_ssh')
-        user = self.client.get(ssh_setup_url).context.get('user')
-        sshProfile = SSHProfile.objects.get(pk=user.id)
+        sshProfile = SSHProfile.objects.get(pk=self.user.id)
         sshProfile.ssh_server_address = '127.0.0.1'
         sshProfile.ssh_username = 'test_user'
         sshProfile.save()
@@ -227,7 +223,44 @@ class ManageSystemViewWithUpdates(TestCase):
         # Setup System information
         self.system1 = System.objects.create(
             hostname='test1.server', 
-            owner=user,
+            owner=self.user,
+            connected=True,
+            system_os_name= 'OS1_name',
+            system_os_version= 'OS1_version',
+            system_kernel= 'OS1_kernel_version',
+            system_package_manager= 'OS1_package_manager'
+        )
+
+        for i in range(35):
+            Package.objects.create(name='package{0}'.format(i+1), current_version='1', new_version=None, active=True, system=self.system1)
+
+        url = reverse('manage_system', kwargs={'system_id': self.system1.id})
+        self.response = self.client.get(url)
+
+    def test_manage_system_view_with_no_updates_message(self):
+        self.assertContains(self.response, 'All packages are up-to-date.')
+
+    def test_manage_system_view_with_no_cve_info_message(self):
+        self.assertContains(self.response, 'No CVE information found.')
+        self.assertContains(self.response, 'Please scan/re-scan the system to analyse CVE.')
+
+
+class ManageSystemViewWithUpdatesTests(TestCase):
+    def setUp(self):
+        # Setup an account
+        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
+        self.client.login(username='johndoe', password='test1234')
+        # Setup SSH profile
+        ssh_setup_url = reverse('setup_ssh')
+        sshProfile = SSHProfile.objects.get(pk=self.user.id)
+        sshProfile.ssh_server_address = '127.0.0.1'
+        sshProfile.ssh_username = 'test_user'
+        sshProfile.save()
+
+        # Setup System information
+        self.system1 = System.objects.create(
+            hostname='test1.server', 
+            owner=self.user,
             connected=True,
             system_os_name= 'OS1_name',
             system_os_version= 'OS1_version',
@@ -245,21 +278,14 @@ class ManageSystemViewWithUpdates(TestCase):
             self.assertContains(response, 'package{0}'.format(i+1), 3)
 
 
-class ManageSystemViewWithCveInfo(TestCase):
+class ManageSystemViewWithCveInfoTests(TestCase):
     def setUp(self):
         # Setup an account
-        register_url = reverse('register')
-        register_data = {
-            'username': 'johndoe',
-            'password1': 'test1234',
-            'password2': 'test1234'
-        }
-        self.client.post(register_url, register_data)
-        
+        self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
+        self.client.login(username='johndoe', password='test1234')
         # Setup SSH profile
         ssh_setup_url = reverse('setup_ssh')
-        user = self.client.get(ssh_setup_url).context.get('user')
-        sshProfile = SSHProfile.objects.get(pk=user.id)
+        sshProfile = SSHProfile.objects.get(pk=self.user.id)
         sshProfile.ssh_server_address = '127.0.0.1'
         sshProfile.ssh_username = 'test_user'
         sshProfile.save()
@@ -267,7 +293,7 @@ class ManageSystemViewWithCveInfo(TestCase):
         # Setup System information
         self.system1 = System.objects.create(
             hostname='test1.server', 
-            owner=user,
+            owner=self.user,
             connected=True,
             system_os_name= 'OS1_name',
             system_os_version= 'OS1_version',

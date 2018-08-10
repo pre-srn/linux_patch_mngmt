@@ -13,12 +13,8 @@ class RegisterTests(TestCase):
         url = reverse('register')
         self.response = self.client.get(url)
 
-    def test_signup_status_code(self):
+    def test_register_status_code(self):
         self.assertEquals(self.response.status_code, 200)
-
-    def test_signup_url_resolves_signup_view(self):
-        view = resolve('/account/register/')
-        self.assertEquals(view.func, register)
 
     def test_csrf(self):
         self.assertContains(self.response, 'csrfmiddlewaretoken')
@@ -59,12 +55,10 @@ class SuccessfulRegisterTests(TestCase):
 class InvalidSignUpTests(TestCase):
     def setUp(self):
         url = reverse('register')
+        # Submitting an empty form
         self.response = self.client.post(url, {})
 
-    def test_signup_status_code(self):
-        '''
-        An invalid form submission should return to the same page
-        '''
+    def test_register_status_code(self):
         self.assertEquals(self.response.status_code, 200)
 
     def test_form_errors(self):
@@ -73,6 +67,7 @@ class InvalidSignUpTests(TestCase):
 
     def test_dont_create_user(self):
         self.assertFalse(User.objects.exists())
+
 
 class LoginRequiredTests(TestCase):
     '''
