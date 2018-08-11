@@ -199,8 +199,7 @@ def ajax_get_cve_info_table(request):
 @ssh_setup_required
 def ajax_get_task_info_table(request):
     tasks = Task.objects.filter(initiated_by=request.user).order_by('-started_at')
-    total_tasks = tasks.count()
-    return render(request, 'ajax_templates/task_info_table.html', {'tasks': tasks, 'total_tasks': total_tasks})
+    return render(request, 'ajax_templates/task_info_table.html', {'tasks': tasks})
 
 
 @login_required

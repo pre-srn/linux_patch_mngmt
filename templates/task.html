@@ -39,14 +39,15 @@
 
 {% block javascript %}
 <script>
-function refresh_page() {
-    $.ajax({
-        url: '{% url "get_task_info_table" %}',
-        success: function(response) {
-            $("#taskInfoTableWrapper").html(response);
-        }
-    });
-}
+    function refresh_page() {
+        console.log('called');
+        $.ajax({
+            url: '{% url "get_task_info_table" %}',
+            success: function(response) {
+                $("#taskInfoTableWrapper").html(response);
+            }
+        });
+    }
 </script>
 {% include 'includes/task_notification.html' %} 
-{% endblock javascript%}
+{% endblock javascript %}

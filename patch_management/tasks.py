@@ -34,6 +34,16 @@ def celery_ssh_run_update_package(ssh_addr, ssh_user, ssh_port, ssh_key, ssh_pas
     is_connected, ssh_conn = connect_ssh(ssh_addr, ssh_user, ssh_port, ssh_key, ssh_passphrase)
 
     if is_connected:
+        # Checking connection first
+        try:
+            ssh_connected_systems = ssh_conn.run('mco ping', hide=True)
+        except Exception:
+            raise ConnectionError('Network connection / command error')
+            
+        connected_systems = process_ssh_res_connected_systems(ssh_connected_systems)
+        if system_hostname not in connected_systems:
+            raise ConnectionError('Cannot connect to {0}. The server may be unavailable or has disconnected.'.format(system_hostname))
+            
         try:
             ssh_conn.run('mco rpc package update package={0} -I {1}'.format(package_name, system_hostname), pty=True, hide=True)
             ssh_installed_packages = ssh_conn.run('mco shell run "rpm -qa --qf \'%{{NAME}}.%{{ARCH}} %{{VERSION}}-%{{RELEASE}}\n\' || \
@@ -62,6 +72,16 @@ def celery_ssh_run_update_all_packages(ssh_addr, ssh_user, ssh_port, ssh_key, ss
     is_connected, ssh_conn = connect_ssh(ssh_addr, ssh_user, ssh_port, ssh_key, ssh_passphrase)
 
     if is_connected:
+        # Checking connection first
+        try:
+            ssh_connected_systems = ssh_conn.run('mco ping', hide=True)
+        except Exception:
+            raise ConnectionError('Network connection / command error')
+            
+        connected_systems = process_ssh_res_connected_systems(ssh_connected_systems)
+        if system_hostname not in connected_systems:
+            raise ConnectionError('Cannot connect to {0}. The server may be unavailable or has disconnected.'.format(system_hostname))
+
         packages = get_package_update_list(system_id)
         try:
             for package in packages:
