@@ -142,7 +142,7 @@ def ajax_get_system_info(request):
                                                                 request.user.id)
             Task.objects.create(task_id=celery_task_id, task_name="Get system information", initiated_by=request.user)
             response['error'] = False
-            response['message'] = 'Task initiated<p>Task: Get system information<br/><small>[{0}]</small></p>'.format(celery_task_id)
+            response['message'] = '<strong>Task initiated</strong><p>Task: Get system information<br/><small>[{0}]</small></p>'.format(celery_task_id)
         else:
             response['error'] = True
             response['message'] = 'Please input your SSH passphase first.'
@@ -227,7 +227,7 @@ def ajax_update_package(request):
                                 task_name='Update {0} on {1}'.format(package.name, system.hostname), 
                                 initiated_by=request.user)
             response['error'] = False
-            response['message'] = 'Task initiated<p>Task: Update {0} on {1}<br/><small>[{2}]</small></p>'.format(package.name, system.hostname, celery_task_id)
+            response['message'] = '<strong>Task initiated</strong><p>Task: Update {0} on {1}<br/><small>[{2}]</small></p>'.format(package.name, system.hostname, celery_task_id)
         else:
             response['error'] = True
             response['message'] = 'Please input your SSH passphase first.'
@@ -257,7 +257,7 @@ def ajax_update_all_packages(request):
                                 task_name='Update all packages on {0}'.format(system.hostname), 
                                 initiated_by=request.user)
             response['error'] = False
-            response['message'] = 'Task initiated<p>Task: Update all packages on {0}<br/><small>[{1}]</small></p>'.format(system.hostname, celery_task_id)
+            response['message'] = '<strong>Task initiated</strong><p>Task: Update all packages on {0}<br/><small>[{1}]</small></p>'.format(system.hostname, celery_task_id)
         else:
             response['error'] = True
             response['message'] = 'Please input your SSH passphase first.'
@@ -273,7 +273,7 @@ def ajax_scan_cve_all_systems(request):
     celery_task_id = celery_scan_cve.delay(request.user.id, None)
     Task.objects.create(task_id=celery_task_id, task_name="Scan CVE on all systems", initiated_by=request.user)
     response['error'] = False
-    response['message'] = 'Task initiated<p>Task: Scan CVE on all systems<br/><small>[{0}]</small></p>'.format(celery_task_id)
+    response['message'] = '<strong>Task initiated</strong><p>Task: Scan CVE on all systems<br/><small>[{0}]</small></p>'.format(celery_task_id)
     return JsonResponse(response)
 
 
@@ -286,7 +286,7 @@ def ajax_scan_cve_specific_system(request, system_id):
         celery_task_id = celery_scan_cve.delay(request.user.id, system.id)
         Task.objects.create(task_id=celery_task_id, task_name="Scan CVE on {0}".format(system.hostname), initiated_by=request.user)
         response['error'] = False
-        response['message'] = 'Task initiated<p>Task: Scan CVE on {0}<br/><small>[{1}]</small></p>'.format(system.hostname, celery_task_id)
+        response['message'] = '<strong>Task initiated</strong><p>Task: Scan CVE on {0}<br/><small>[{1}]</small></p>'.format(system.hostname, celery_task_id)
     else:
         response['error'] = True
         response['message'] = "This system doesn't support CVE scanning at the moment as it doesn't use RPM."
