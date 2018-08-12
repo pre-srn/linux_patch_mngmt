@@ -9,13 +9,16 @@
                     var task = notified_tasks[i];
                     if (task.task_status === "SUCCESS") {
                         toastr.success("Task: " + task.task_name + "<p><small>[" + task.task_id + "]</small></p>", "Task success");
+                        if (typeof refresh_page == 'function') { 
+                            refresh_page(); 
+                        }
                     }
                     else if (task.task_status === "FAILURE") {
                         toastr.error("Task: " + task.task_name + "<p><small>[" + task.task_id + "]</small></p>", "Task failed");
+                        if (typeof refresh_page == 'function') { 
+                            refresh_page(); 
+                        }
                     }
-                }
-                if (typeof refresh_page == 'function') { 
-                    refresh_page(); 
                 }
             }
         });
