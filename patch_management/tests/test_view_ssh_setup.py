@@ -70,7 +70,7 @@ class SSHConfigTests(TestCase):
         self.assertIsInstance(form, SetupSSHForm)
 
     def test_contains_setup_message(self):
-        self.assertContains(self.response, 'SSH configuration')
+        self.assertContains(self.response, 'Puppet master server SSH configuration')
 
 
 class SSHConfigInvalidFormTests(TestCase):
