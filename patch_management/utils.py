@@ -197,7 +197,7 @@ def get_cve_package_list(request_user_id, system_id):
         user = User.objects.get(pk=request_user_id)
         systems = System.objects.filter(owner=user, connected=True, system_package_manager='yum')
     else:
-        systems = System.objects.filter(pk=system_id)
+        systems = System.objects.filter(pk=system_id, system_package_manager='yum')
 
     for system in systems:
         packages = Package.objects.filter(system=system, active=True)
