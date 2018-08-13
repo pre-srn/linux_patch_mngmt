@@ -89,7 +89,11 @@ def process_ssh_res_sys_info(ssh_sys_info, connected_systems):
             cur_connected_system = line[:-1]
             prev_line = None
             while True:
-                sys_info_line = next(ssh_sys_info_lines).strip()
+                sys_info_line = next(ssh_sys_info_lines, None)
+                if sys_info_line is None: 
+                    break # Emergency exit if things go wrong
+                else: 
+                    sys_info_line = sys_info_line.strip()
                 if len(sys_info_line) > 0:
                     if sys_info_line.startswith('PRETTY_NAME='):
                         sys_os_name[cur_connected_system] = sys_info_line.split('=', 2)[1].replace('"', '')
@@ -112,14 +116,20 @@ def process_ssh_res_installed_packages(ssh_installed_packages, connected_systems
             cur_connected_system = line[:-1]
             install_package_info = []
             while True:
-                package_line = next(ssh_installed_package_lines).strip()
-                if (len(package_line) == 0 or package_line.startswith('STDERR:')): break
+                package_line = next(ssh_installed_package_lines, None)
+                if package_line is None: 
+                    break # Emergency exit if things go wrong
+                else: 
+                    package_line = package_line.strip()
+                if (len(package_line) == 0 or package_line.startswith('STDERR:')):
+                    break
                 package_info = package_line.split(' ', 2)
                 package_name = package_info[0]
                 package_version = package_info[1]
                 if not package_name.startswith('gpg-pubkey'):
                     install_package_info.append([package_name, package_version])
             installed_packages[cur_connected_system] = install_package_info
+
     return installed_packages
 
 
@@ -133,15 +143,28 @@ def process_ssh_res_available_updates(ssh_available_updates, connected_systems):
             cur_connected_system = line
             available_update_result = ''
             available_update_info = []
+            package_manager_info = ''
             outdated_packages_found = False
+
             while True:
-                available_update_line = next(ssh_available_update_lines).strip()
+                available_update_line = next(ssh_available_update_lines, None)
+                if available_update_line is None: 
+                    break # Emergency exit if things go wrong
+                else: 
+                    available_update_line = available_update_line.strip()
+
                 if outdated_packages_found:
-                    if available_update_line.startswith('Output:'): break
-                    available_update_result = available_update_result + available_update_line
+                    if available_update_line.startswith('Output:'): 
+                        outdated_packages_found = False
+                    else:
+                        available_update_result = available_update_result + available_update_line
                 elif available_update_line.startswith('Outdated Packages:'):
                     available_update_result = available_update_result + available_update_line.replace('Outdated Packages:', '')
                     outdated_packages_found = True
+                elif available_update_line.startswith('Package Manager:'):
+                    package_manager_info = available_update_line.split(':', 2)[1].strip()
+                    break
+
             # Convert the result Ruby data structure to JSON format
             available_update_result = available_update_result.replace(':package','"package"') \
                                                             .replace(':version','"version"')  \
@@ -155,8 +178,7 @@ def process_ssh_res_available_updates(ssh_available_updates, connected_systems):
                 if not package_name.startswith('gpg-pubkey'):
                     available_update_info.append([package_name, package_version])
             available_updates[cur_connected_system] = available_update_info
-        elif line.startswith('Package Manager:'):
-            package_manager[cur_connected_system] = line.split(':', 2)[1].strip()
+            package_manager[cur_connected_system] = package_manager_info
     return available_updates, package_manager
 
 
