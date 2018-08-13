@@ -89,7 +89,7 @@ def process_ssh_res_sys_info(ssh_sys_info, connected_systems):
             cur_connected_system = line[:-1]
             prev_line = None
             while True:
-                sys_info_line = next(ssh_sys_info_lines)
+                sys_info_line = next(ssh_sys_info_lines).strip()
                 if len(sys_info_line) > 0:
                     if sys_info_line.startswith('PRETTY_NAME='):
                         sys_os_name[cur_connected_system] = sys_info_line.split('=', 2)[1].replace('"', '')

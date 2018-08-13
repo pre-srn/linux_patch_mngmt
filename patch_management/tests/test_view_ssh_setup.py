@@ -10,7 +10,7 @@ class SSHSetupTests(TestCase):
     Testing/verifying the SSH setup form
     '''
     def setUp(self):
-        # Setup an account
+        # Setup a test account
         self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
         self.client.login(username='johndoe', password='test1234')
         url = reverse('setup_ssh')
@@ -32,6 +32,9 @@ class SSHSetupTests(TestCase):
 
 
 class SSHSetupInvalidFormTests(TestCase):
+    '''
+    Testing SSH setup invalid case
+    '''
     def setUp(self):
         # Setup an account
         self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
@@ -53,7 +56,7 @@ class SSHConfigTests(TestCase):
     Testing/verifying the SSH config form
     '''
     def setUp(self):
-        # Setup an account
+        # Setup a test account
         self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
         self.client.login(username='johndoe', password='test1234')
         url = reverse('config_ssh')
@@ -74,8 +77,11 @@ class SSHConfigTests(TestCase):
 
 
 class SSHConfigInvalidFormTests(TestCase):
+    '''
+    Testing SSH config invalid case
+    '''
     def setUp(self):
-        # Setup an account
+        # Setup a test account
         self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
         self.client.login(username='johndoe', password='test1234')
         # Submit an empty form
@@ -95,7 +101,7 @@ class SSHSetupRequiredTests(TestCase):
     Testing SSH setup required on each page for a new registered user
     '''
     def setUp(self):
-        # Setup an account
+        # Setup a test account
         self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
         self.client.login(username='johndoe', password='test1234')
         self.setup_ssh_url = reverse('setup_ssh')

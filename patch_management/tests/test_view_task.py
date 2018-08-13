@@ -6,11 +6,14 @@ from django.contrib.auth.models import User
 from ..models import SSHProfile, Task, TaskResult
 
 class TaskViewTestCase(TestCase):
+    '''
+    A base test case of Task view
+    '''
     def setUp(self):
-        # Setup an account
+        # Setup a test account
         self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
         self.client.login(username='johndoe', password='test1234')
-        # Setup (mocked up) SSH profile
+        # Setup a test SSH profile
         ssh_setup_url = reverse('setup_ssh')
         sshProfile = SSHProfile.objects.get(pk=self.user.id)
         sshProfile.ssh_server_address = '127.0.0.1'
@@ -22,13 +25,20 @@ class TaskViewTestCase(TestCase):
 
 
 class TaskViewTests(TaskViewTestCase):
+    '''
+    Verifying Task view
+    '''
     def setUp(self):
         super().setUp()
 
     def test_task_view_status_code(self):
         self.assertEquals(self.response.status_code, 200)
 
+
 class TaskViewNoDataTests(TaskViewTestCase):
+    '''
+    Testing Task view with no data message
+    '''
     def setUp(self):
         super().setUp()
 
@@ -37,6 +47,9 @@ class TaskViewNoDataTests(TaskViewTestCase):
 
 
 class TaskViewWithDataTests(TaskViewTestCase):
+    '''
+    Testing Task view with task data
+    '''
     def setUp(self):
         super().setUp()
 
@@ -64,6 +77,9 @@ class TaskViewWithDataTests(TaskViewTestCase):
         self.assertContains(response, 'task_id_2_failure', 1)
 
     def test_task_view_clear_task(self):
+        '''
+        Testing clear completed tasks 
+        '''
         TaskResult.objects.all().delete()
         TaskResult.objects.create(task_id='task_id_1', status='SUCCESS', result={'exc_message':['task_id_1_success']})
         TaskResult.objects.create(task_id='task_id_2', status='FAILURE', result={'exc_message':['task_id_2_failure']})

@@ -8,11 +8,14 @@ from ..models import SSHProfile, System, Package, CVE
 
 
 class HomeViewTestCase(TestCase):
+    '''
+    A base test case for Home view unit test
+    '''
     def setUp(self):
-        # Setup an account
+        # Setup a test account
         self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
         self.client.login(username='johndoe', password='test1234')
-        # Setup (mocked up) SSH profile
+        # Setup a test SSH profile
         ssh_setup_url = reverse('setup_ssh')
         sshProfile = SSHProfile.objects.get(pk=self.user.id)
         sshProfile.ssh_server_address = '127.0.0.1'
@@ -24,6 +27,9 @@ class HomeViewTestCase(TestCase):
 
 
 class HomeViewTests(HomeViewTestCase):
+    '''
+    Verifying Home view elements
+    '''
     def setUp(self):
         super().setUp()
 
@@ -39,6 +45,9 @@ class HomeViewTests(HomeViewTestCase):
 
 
 class HomeViewNoDataTests(HomeViewTestCase):
+    '''
+    Testing Home view with no data message
+    '''
     def setUp(self):
         super().setUp()
 
@@ -48,6 +57,9 @@ class HomeViewNoDataTests(HomeViewTestCase):
 
 
 class HomeViewWithDataTests(HomeViewTestCase):
+    '''
+    Testing Home view with connected system data
+    '''
     def setUp(self):
         super().setUp()
 
@@ -156,11 +168,14 @@ class HomeViewWithDataTests(HomeViewTestCase):
 
 
 class ManageSystemViewTestCase(TestCase):
+    '''
+    A base test case for Manage System view unit test
+    '''
     def setUp(self, total_mocked_package):
-        # Setup an account
+        # Setup a test account
         self.user = User.objects.create_user(username='johndoe', email='mail@example.com', password='test1234')
         self.client.login(username='johndoe', password='test1234')
-        # Setup SSH profile
+        # Setup a test SSH profile
         ssh_setup_url = reverse('setup_ssh')
         sshProfile = SSHProfile.objects.get(pk=self.user.id)
         sshProfile.ssh_server_address = '127.0.0.1'
@@ -186,6 +201,9 @@ class ManageSystemViewTestCase(TestCase):
 
 
 class ManageSystemViewTests(ManageSystemViewTestCase):
+    '''
+    Verifying Manage System view elements
+    '''
     def setUp(self):
         super().setUp(total_mocked_package=35)
 
@@ -201,6 +219,9 @@ class ManageSystemViewTests(ManageSystemViewTestCase):
 
 
 class ManageSystemViewNoDataTests(ManageSystemViewTestCase):
+    '''
+    Testing Manage System view with no data message
+    '''
     def setUp(self):
         super().setUp(total_mocked_package=35)
 
@@ -218,6 +239,9 @@ class ManageSystemViewNoDataTests(ManageSystemViewTestCase):
 
 
 class ManageSystemViewWithUpdatesTests(ManageSystemViewTestCase):
+    '''
+    Testing Manage System view with available update information
+    '''
     def setUp(self):
         super().setUp(total_mocked_package=0)
 
@@ -232,10 +256,13 @@ class ManageSystemViewWithUpdatesTests(ManageSystemViewTestCase):
 
 
 class ManageSystemViewWithCveInfoTests(ManageSystemViewTestCase):
+    '''
+    Testing Manage System view with CVE information
+    '''
     def setUp(self):
         super().setUp(total_mocked_package=35)
         
-        # Setup CVE info
+        # Setup test CVE information
         for i in range(20):
             if i < 5:
                 CVE.objects.create(cve_id='cve-{0}-{0}'.format(i+1), description='desc_test', cvss_v3=1.23,
