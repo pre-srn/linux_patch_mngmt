@@ -19,26 +19,12 @@
         <h4>Available updates on {{ system.hostname }}</h4>
     </div>
     <div class="card-body scroll" id="outdatedPackagesTableWrapper">
-        {% if system.get_available_updates_count == 0 %}
-            <p class="blockquote"><span class="oi oi-check"></span> All packages are up-to-date.</p>
-        {% else %}
-            {% include "ajax_templates/outdated_packages_table.html" %}
-        {% endif %}
+        {% include "ajax_templates/outdated_packages_table.html" %}
     </div>
 </div>
 
 <div class="card" id="cveInfoWrapper">
-    {% if system.get_cves_count == 0 %}
-        <div class="card-header">
-            <h4>CVE information on {{ system.hostname }}</h4>
-        </div>
-        <div class="card-body">
-            <p class="blockquote">No CVE information found.</p>
-            <p><em>Please scan/re-scan the system to analyse CVE.</em></p>
-        </div>
-    {% else %}
-        {% include "ajax_templates/cve_info_table.html" %}
-    {% endif %}
+    {% include "ajax_templates/cve_info_table.html" %}
 </div>
 
 <!-- Installed packages modal -->

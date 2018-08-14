@@ -177,7 +177,7 @@ def ajax_get_outdated_packages_table(request):
         system_id = int(request.GET.get('system_id', None))
         system = get_object_or_404(System.objects.filter(owner=request.user, connected=True), pk=system_id)
         outdated_packages = system.packages.filter(active=True, new_version__isnull=False).order_by(Lower('name'))
-        return render(request, 'ajax_templates/outdated_packages_table.html', {'outdated_packages': outdated_packages})
+        return render(request, 'ajax_templates/outdated_packages_table.html', {'system':system, 'outdated_packages': outdated_packages})
     else:
         return redirect('home') 
 

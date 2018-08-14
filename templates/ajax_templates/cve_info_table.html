@@ -1,64 +1,74 @@
-<div class="card-header">
-    <h4>CVE information on {{ system.hostname }}</h4>
-    <p>Scanned on <em>{{ system.get_cves_scanned_date|date:'d/m/Y H:i:s' }}</em></p>
-</div>
-<div class="card-body scroll">
-    <table class="table table-hover">
-        <thead class="thead-inverse">
-            <tr>
-                <th>#</th>
-                <th nowrap>Affected Package</th>
-                <th>CVE</th>
-                <th>Severity</th>
-                <th nowrap>CVSS score (v3)</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for cve in cves %}
-            <tr>
-                <td>
-                    {{ forloop.counter }}
-                </td>
-                <td>
-                    {{ cve.affected_package }}
-                </td>
-                <td>
-                    {{ cve.cve_id }}
-                </td>
-                {% if cve.severity == "low" %}
-                <td>
-                    <span class="badge badge-secondary">{{ cve.severity|capfirst }}</span>
-                </td>
-                {% elif cve.severity == "moderate" %}
-                <td>
-                    <span class="badge badge-warning">{{ cve.severity|capfirst }}</span>
-                </td>
-                {% elif cve.severity == "important" %}
-                <td>
-                    <span class="badge badge-danger">{{ cve.severity|capfirst }}</span>
-                </td>
-                {% elif cve.severity == "critical" %}
-                <td>
-                    <span class="badge badge-danger">{{ cve.severity|capfirst }}</span>
-                </td>
-                {% endif %}
-                <td>
-                    {{ cve.cvss_v3|default_if_none:"N/A" }}
-                </td>
-                <td>
-                    <button type="button" class="btn btn-dark" 
-                        data-toggle="modal" data-target="#cveInfoModal"
-                        data-cve-id="{{ cve.cve_id }}"
-                        data-cve-affected-package="{{ cve.affected_package }}"
-                        data-cve-severity="{{ cve.severity|capfirst }}"
-                        data-cve-cvss="{{ cve.cvss_v3|default_if_none:'N/A' }}"
-                        data-cve-description="{{ cve.description|capfirst }}">
-                        Detail
-                    </button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+{% if system.get_cves_count == 0 %}
+    <div class="card-header">
+        <h4>CVE information on {{ system.hostname }}</h4>
+    </div>
+    <div class="card-body">
+        <p class="blockquote">No CVE information found.</p>
+        <p><em>Please scan/re-scan the system to analyse CVE.</em></p>
+    </div>
+{% else %}
+    <div class="card-header">
+        <h4>CVE information on {{ system.hostname }}</h4>
+        <p>Scanned on <em>{{ system.get_cves_scanned_date|date:'d/m/Y H:i:s' }}</em></p>
+    </div>
+    <div class="card-body scroll">
+        <table class="table table-hover">
+            <thead class="thead-inverse">
+                <tr>
+                    <th>#</th>
+                    <th nowrap>Affected Package</th>
+                    <th>CVE</th>
+                    <th>Severity</th>
+                    <th nowrap>CVSS score (v3)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cve in cves %}
+                <tr>
+                    <td>
+                        {{ forloop.counter }}
+                    </td>
+                    <td>
+                        {{ cve.affected_package }}
+                    </td>
+                    <td>
+                        {{ cve.cve_id }}
+                    </td>
+                    {% if cve.severity == "low" %}
+                    <td>
+                        <span class="badge badge-secondary">{{ cve.severity|capfirst }}</span>
+                    </td>
+                    {% elif cve.severity == "moderate" %}
+                    <td>
+                        <span class="badge badge-warning">{{ cve.severity|capfirst }}</span>
+                    </td>
+                    {% elif cve.severity == "important" %}
+                    <td>
+                        <span class="badge badge-danger">{{ cve.severity|capfirst }}</span>
+                    </td>
+                    {% elif cve.severity == "critical" %}
+                    <td>
+                        <span class="badge badge-danger">{{ cve.severity|capfirst }}</span>
+                    </td>
+                    {% endif %}
+                    <td>
+                        {{ cve.cvss_v3|default_if_none:"N/A" }}
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-dark" 
+                            data-toggle="modal" data-target="#cveInfoModal"
+                            data-cve-id="{{ cve.cve_id }}"
+                            data-cve-affected-package="{{ cve.affected_package }}"
+                            data-cve-severity="{{ cve.severity|capfirst }}"
+                            data-cve-cvss="{{ cve.cvss_v3|default_if_none:'N/A' }}"
+                            data-cve-description="{{ cve.description|capfirst }}">
+                            Detail
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}

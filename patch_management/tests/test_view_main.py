@@ -53,7 +53,7 @@ class HomeViewNoDataTests(HomeViewTestCase):
 
     def test_home_view_message(self):
         self.assertContains(self.response, 'No Puppet/Mcollective system information.', 1)
-        self.assertContains(self.response, 'Please initial a task to get system information first.', 1)
+        self.assertContains(self.response, 'Please initiate a task to get system information first.', 1)
 
 
 class HomeViewWithDataTests(HomeViewTestCase):

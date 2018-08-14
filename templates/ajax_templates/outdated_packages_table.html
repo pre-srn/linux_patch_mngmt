@@ -1,27 +1,31 @@
-<table class="table table-hover">
-    <thead class="thead-inverse">
-        <tr>
-            <th>#</th>
-            <th>Package name</th>
-            <th>Current Version</th>
-            <th>New Version</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for package in outdated_packages %}
-        <tr>
-            <td>{{ forloop.counter }}</td>
-            <td>{{ package.name }}</td>
-            <td>{{ package.current_version }}</td>
-            <td>{{ package.new_version }}</td>
-            <td>
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#updatePackageModal" 
-                    data-package-id="{{ package.id }}" data-package-name="{{ package.name }}">
-                    Update
-                </button>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+{% if system.get_available_updates_count == 0 %}
+    <p class="blockquote"><span class="oi oi-check"></span> All packages are up-to-date.</p>
+{% else %}
+    <table class="table table-hover">
+        <thead class="thead-inverse">
+            <tr>
+                <th>#</th>
+                <th>Package name</th>
+                <th>Current Version</th>
+                <th>New Version</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for package in outdated_packages %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ package.name }}</td>
+                <td>{{ package.current_version }}</td>
+                <td>{{ package.new_version }}</td>
+                <td>
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#updatePackageModal" 
+                        data-package-id="{{ package.id }}" data-package-name="{{ package.name }}">
+                        Update
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
