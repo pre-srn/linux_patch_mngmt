@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.urls import reverse, resolve
 from django.contrib.auth.models import User
 
-from ..forms import SSHPassphaseSubmitForm
+from ..forms import SSHPassphraseSubmitForm
 from ..models import SSHProfile, System, Package, CVE
 
 
@@ -38,7 +38,7 @@ class HomeViewTests(HomeViewTestCase):
 
     def test_home_contains_form(self):
         form = self.response.context.get('form')
-        self.assertIsInstance(form, SSHPassphaseSubmitForm)
+        self.assertIsInstance(form, SSHPassphraseSubmitForm)
 
     def test_home_view_status_code(self):
         self.assertEquals(self.response.status_code, 200)
@@ -212,7 +212,7 @@ class ManageSystemViewTests(ManageSystemViewTestCase):
 
     def test_manage_system_contains_form(self):
         form = self.response.context.get('form')
-        self.assertIsInstance(form, SSHPassphaseSubmitForm) 
+        self.assertIsInstance(form, SSHPassphraseSubmitForm) 
 
     def test_manage_system_status_code(self):
         self.assertEquals(self.response.status_code, 200)

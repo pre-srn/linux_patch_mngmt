@@ -2,8 +2,8 @@ from django import forms
 from .models import SSHProfile
 
 class SetupSSHForm(forms.ModelForm):
-    ssh_passphase = forms.CharField(widget=forms.PasswordInput,
-                                    label ="SSH key passphase",
+    ssh_passphrase = forms.CharField(widget=forms.PasswordInput,
+                                    label ="SSH key passphrase",
                                     help_text="Note: This value will NOT be saved anywhere.")
 
     class Meta:
@@ -25,16 +25,16 @@ class SetupSSHForm(forms.ModelForm):
         for key in self.fields:
             self.fields[key].required = True
 
-class SSHPassphaseSubmitForm(forms.Form):
-    ssh_passphase = forms.CharField(widget=forms.PasswordInput, 
+class SSHPassphraseSubmitForm(forms.Form):
+    ssh_passphrase = forms.CharField(widget=forms.PasswordInput, 
                     required=True, 
-                    help_text="Please enter your SSH passphase here. Note that this value will NOT be saved anywhere.")
+                    help_text="Please enter your SSH passphrase here. Note that this value will NOT be saved anywhere.")
 
 class UpdateAllPackagesAjaxSubmitForm(forms.Form):
     system_id = forms.CharField(required=True)
-    ssh_passphase = forms.CharField(widget=forms.PasswordInput, required=True)
+    ssh_passphrase = forms.CharField(widget=forms.PasswordInput, required=True)
 
 class UpdatePackageAjaxSubmitForm(forms.Form):
     system_id = forms.CharField(required=True)
     package_id = forms.CharField(required=True)
-    ssh_passphase = forms.CharField(widget=forms.PasswordInput, required=True)
+    ssh_passphrase = forms.CharField(widget=forms.PasswordInput, required=True)

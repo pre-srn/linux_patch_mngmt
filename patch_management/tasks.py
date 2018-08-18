@@ -26,7 +26,7 @@ def celery_ssh_run_get_system_info(ssh_addr, ssh_user, ssh_port, ssh_key, ssh_pa
         # Save all system information data
         save_system_information(connected_systems, request_user_id, sys_os_name, sys_os_ver, sys_kernel, package_manager, installed_packages, available_updates)
     else:
-        raise ConnectionError('Cannot connect to your Puppet master server. Your server may be unavailable or your SSH passphase may be invalid.')
+        raise ConnectionError('Cannot connect to your Puppet master server. Your server may be unavailable or your SSH passphrase may be invalid.')
     return
 
 @shared_task
@@ -64,7 +64,7 @@ def celery_ssh_run_update_package(ssh_addr, ssh_user, ssh_port, ssh_key, ssh_pas
             raise SystemError('Puppet/Mcollective update process error.')
 
     else:
-        raise ConnectionError('Cannot connect to your Puppet master server. Your server may be unavailable or your SSH passphase may be invalid.')
+        raise ConnectionError('Cannot connect to your Puppet master server. Your server may be unavailable or your SSH passphrase may be invalid.')
     return
 
 @shared_task
@@ -104,7 +104,7 @@ def celery_ssh_run_update_all_packages(ssh_addr, ssh_user, ssh_port, ssh_key, ss
             raise SystemError('Puppet/Mcollective update process error.')
 
     else:
-        raise ConnectionError('Cannot connect to your Puppet master server. Your server may be unavailable or your SSH passphase may be invalid.')
+        raise ConnectionError('Cannot connect to your Puppet master server. Your server may be unavailable or your SSH passphrase may be invalid.')
     return
 
 @shared_task

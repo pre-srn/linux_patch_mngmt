@@ -128,7 +128,7 @@
             url: '{% url "get_system_info" %}',
             data: {
                 csrfmiddlewaretoken: '{{ csrf_token }}',
-                ssh_passphase: $('#id_ssh_passphase').val()
+                ssh_passphrase: $('#id_ssh_passphrase').val()
             },
             dataType: 'json',
             success: function(response) {

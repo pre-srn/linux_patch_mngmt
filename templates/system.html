@@ -190,7 +190,7 @@
                 csrfmiddlewaretoken: '{{ csrf_token }}',
                 system_id: '{{ system.id }}',
                 package_id: $(this).data('package-id'),
-                ssh_passphase: $('#id_ssh_passphase').val()
+                ssh_passphrase: $('#id_ssh_passphrase').val()
             },
             dataType: 'json',
             success: function(response) {
@@ -208,7 +208,7 @@
             data: {
                 csrfmiddlewaretoken: '{{ csrf_token }}',
                 system_id: '{{ system.id }}',
-                ssh_passphase: $('#id_ssh_passphase').val()
+                ssh_passphrase: $('#id_ssh_passphrase').val()
             },
             dataType: 'json',
             success: function(response) {

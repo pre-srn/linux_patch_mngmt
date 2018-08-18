@@ -12,7 +12,7 @@ from django_celery_results.models import TaskResult
 
 from .decorators import ssh_setup_required
 from .models import System, SSHProfile, Package, Task, CVE
-from .forms import SetupSSHForm, SSHPassphaseSubmitForm, UpdatePackageAjaxSubmitForm, UpdateAllPackagesAjaxSubmitForm
+from .forms import SetupSSHForm, SSHPassphraseSubmitForm, UpdatePackageAjaxSubmitForm, UpdateAllPackagesAjaxSubmitForm
 from .utils import connect_ssh, is_puppet_running, create_tmp_file, delete_tmp_file
 from .tasks import *
 
@@ -36,13 +36,13 @@ def register(request):
 def home(request):
     systems = System.objects.filter(owner=request.user, connected=True).order_by('hostname')
     total_systems = systems.count()
-    form = SSHPassphaseSubmitForm()
+    form = SSHPassphraseSubmitForm()
     return render(request, 'home.html', {'form': form, 'systems': systems, 'total_systems': total_systems})
 
 @login_required
 @ssh_setup_required
 def manage_system(request, system_id):
-    form = SSHPassphaseSubmitForm()
+    form = SSHPassphraseSubmitForm()
     system = get_object_or_404(System.objects.filter(owner=request.user, connected=True), pk=system_id)
     installed_packages = system.packages.filter(active=True).order_by(Lower('name'))
     outdated_packages = installed_packages.filter(new_version__isnull=False).order_by(Lower('name'))
@@ -82,7 +82,7 @@ def setup_ssh(request):
                                                     str(form.cleaned_data['ssh_username']), 
                                                     str(form.cleaned_data['ssh_server_port']), 
                                                     tmp_ssh_key, 
-                                                    str(form.cleaned_data['ssh_passphase']))
+                                                    str(form.cleaned_data['ssh_passphrase']))
             # Test connection
             if is_connected:
                 if (is_puppet_running(ssh_connection)):
@@ -93,7 +93,7 @@ def setup_ssh(request):
                                                                         str(ssh_profile.ssh_username),
                                                                         str(ssh_profile.ssh_server_port),
                                                                         str(ssh_profile.ssh_key),
-                                                                        str(form.cleaned_data['ssh_passphase']), 
+                                                                        str(form.cleaned_data['ssh_passphrase']), 
                                                                         request.user.id)
                     Task.objects.create(task_id=celery_task_id, task_name="Get system information", initiated_by=request.user)
                     messages.info(request, 'Successfully connected to your Puppet master server. \
@@ -130,7 +130,7 @@ def config_password_done(request):
 @ssh_setup_required
 def ajax_get_system_info(request):
     if request.method == 'POST':
-        form = SSHPassphaseSubmitForm(request.POST)
+        form = SSHPassphraseSubmitForm(request.POST)
         response = {}
         if form.is_valid():
             ssh_profile = request.user.sshprofile
@@ -138,14 +138,14 @@ def ajax_get_system_info(request):
                                                                 str(ssh_profile.ssh_username),
                                                                 str(ssh_profile.ssh_server_port),
                                                                 str(ssh_profile.ssh_key),
-                                                                str(form.cleaned_data['ssh_passphase']), 
+                                                                str(form.cleaned_data['ssh_passphrase']), 
                                                                 request.user.id)
             Task.objects.create(task_id=celery_task_id, task_name="Get system information", initiated_by=request.user)
             response['error'] = False
             response['message'] = '<strong>Task initiated</strong><p>Task: Get system information<br/><small>[{0}]</small></p>'.format(celery_task_id)
         else:
             response['error'] = True
-            response['message'] = 'Please input your SSH passphase first.'
+            response['message'] = 'Please input your SSH passphrase first.'
         return JsonResponse(response)
     else:
         return redirect('home') 
@@ -218,7 +218,7 @@ def ajax_update_package(request):
                                                                 str(ssh_profile.ssh_username),
                                                                 str(ssh_profile.ssh_server_port),
                                                                 str(ssh_profile.ssh_key),
-                                                                str(form.cleaned_data['ssh_passphase']),
+                                                                str(form.cleaned_data['ssh_passphrase']),
                                                                 package_id,
                                                                 package.name,
                                                                 system_id,
@@ -230,7 +230,7 @@ def ajax_update_package(request):
             response['message'] = '<strong>Task initiated</strong><p>Task: Update {0} on {1}<br/><small>[{2}]</small></p>'.format(package.name, system.hostname, celery_task_id)
         else:
             response['error'] = True
-            response['message'] = 'Please input your SSH passphase first.'
+            response['message'] = 'Please input your SSH passphrase first.'
         return JsonResponse(response)
     else:
         return redirect('home')
@@ -250,7 +250,7 @@ def ajax_update_all_packages(request):
                                                                     str(ssh_profile.ssh_username),
                                                                     str(ssh_profile.ssh_server_port),
                                                                     str(ssh_profile.ssh_key),
-                                                                    str(form.cleaned_data['ssh_passphase']),
+                                                                    str(form.cleaned_data['ssh_passphrase']),
                                                                     system_id,
                                                                     system.hostname)
             Task.objects.create(task_id=celery_task_id, 
@@ -260,7 +260,7 @@ def ajax_update_all_packages(request):
             response['message'] = '<strong>Task initiated</strong><p>Task: Update all packages on {0}<br/><small>[{1}]</small></p>'.format(system.hostname, celery_task_id)
         else:
             response['error'] = True
-            response['message'] = 'Please input your SSH passphase first.'
+            response['message'] = 'Please input your SSH passphrase first.'
         return JsonResponse(response)
     else:
         return redirect('home')
