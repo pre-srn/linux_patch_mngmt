@@ -118,7 +118,9 @@ def celery_scan_cve(request_user_id, input_system_id):
         for package in packages:
             package_id = package[0]
             package_name = package[1]
+            # Calling Redhat CVE API (JSON format)
             response = requests.get('https://access.redhat.com/labs/securitydataapi/cve.json?package={0}'.format(package_name))
+            # If CVE found
             if (len(response.json()) > 0):
                 for cve in response.json():
                     cve_info_record = {}
