@@ -1,13 +1,15 @@
 import os
 import tempfile
 import json
+import paramiko
+import socket
 
 from django.contrib.auth.models import User
 from .models import System, Package, CVE
 from fabric import Connection
 from invoke import UnexpectedExit
 
-def connect_ssh(ssh_addr, ssh_user, ssh_port, ssh_key, ssh_passphrase):
+def connect_ssh(ssh_addr, ssh_user, ssh_port, ssh_server_pub_key, ssh_key, ssh_passphrase):
     conn = Connection(host=ssh_addr, 
                     user=ssh_user, 
                     port=ssh_port,
@@ -17,13 +19,27 @@ def connect_ssh(ssh_addr, ssh_user, ssh_port, ssh_key, ssh_passphrase):
                         },
                     connect_timeout="60"
                     )
+    sock = socket.socket()
+    connected = False
+    pub_key_match = False
     try:
+        # Getting the server public key
+        sock.connect((ssh_addr, int(ssh_port)))
+        trans = paramiko.transport.Transport(sock)
+        trans.start_client()
+        server_pub_key = trans.get_remote_server_key()
+        # Validating the server public key
+        expected_pub_key = read_public_key_file(ssh_server_pub_key)
+        if (expected_pub_key == server_pub_key.get_base64()):
+            pub_key_match = True
+        # Checking whether a linux command can be run
         conn.run('uname -s', hide=True)
         conn.close()
-        return True, conn
+        connected = True
+        return connected, pub_key_match, conn
     except Exception:
         del conn
-        return False, None
+        return connected, pub_key_match, None
 
 
 def is_puppet_running(ssh_conn):
@@ -249,6 +265,12 @@ def save_cve_information(cve_info):
                 affected_package = cve['affected_package'],
                 system = cur_system
             )
+
+
+def read_public_key_file(input_file):
+    with open(input_file, 'r') as myfile:
+        key = myfile.read().split(' ', 2)[1]
+    return key
 
 
 def create_tmp_file(input_file):

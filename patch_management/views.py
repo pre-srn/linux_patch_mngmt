@@ -74,38 +74,51 @@ def setup_ssh(request):
     if request.method == 'POST':
         form = SetupSSHForm(request.POST, request.FILES, instance=request.user.sshprofile)
         if form.is_valid():
+            if 'ssh_server_pub_key' in request.FILES:
+                tmp_ssh_server_pub_key = create_tmp_file(request.FILES['ssh_server_pub_key'])
+            else:
+                tmp_ssh_server_pub_key = str(form.instance.ssh_server_pub_key) # In case the file already exists on the server
+
             if 'ssh_key' in request.FILES:
                 tmp_ssh_key = create_tmp_file(request.FILES['ssh_key'])
             else:
                 tmp_ssh_key = str(form.instance.ssh_key) # In case the file already exists on the server
-            is_connected, ssh_connection = connect_ssh(str(form.cleaned_data['ssh_server_address']), 
+
+            is_connected, key_match, ssh_connection = connect_ssh(str(form.cleaned_data['ssh_server_address']), 
                                                     str(form.cleaned_data['ssh_username']), 
-                                                    str(form.cleaned_data['ssh_server_port']), 
-                                                    tmp_ssh_key, 
+                                                    str(form.cleaned_data['ssh_server_port']),
+                                                    tmp_ssh_server_pub_key,
+                                                    tmp_ssh_key,
                                                     str(form.cleaned_data['ssh_passphrase']))
             # Test connection
             if is_connected:
-                if (is_puppet_running(ssh_connection)):
-                    form.save()
-                    if 'ssh_key' in request.FILES: delete_tmp_file(tmp_ssh_key)
-                    ssh_profile = request.user.sshprofile
-                    celery_task_id = celery_ssh_run_get_system_info.delay(str(ssh_profile.ssh_server_address), 
-                                                                        str(ssh_profile.ssh_username),
-                                                                        str(ssh_profile.ssh_server_port),
-                                                                        str(ssh_profile.ssh_key),
-                                                                        str(form.cleaned_data['ssh_passphrase']), 
-                                                                        request.user.id)
-                    Task.objects.create(task_id=celery_task_id, task_name="Get system information", initiated_by=request.user)
-                    messages.info(request, 'Successfully connected to your Puppet master server. \
-                                            A task to get system information has been initiated. \
-                                            <p><small>[{0}]</small></p>'.format(celery_task_id))
-                    return redirect('home')
+                if key_match:
+                    if (is_puppet_running(ssh_connection)):
+                        form.save()
+                        if 'ssh_key' in request.FILES: delete_tmp_file(tmp_ssh_key)
+                        if 'ssh_server_pub_key' in request.FILES: delete_tmp_file(tmp_ssh_server_pub_key)
+                        ssh_profile = request.user.sshprofile
+                        celery_task_id = celery_ssh_run_get_system_info.delay(str(ssh_profile.ssh_server_address), 
+                                                                            str(ssh_profile.ssh_username),
+                                                                            str(ssh_profile.ssh_server_port),
+                                                                            str(ssh_profile.ssh_server_pub_key),
+                                                                            str(ssh_profile.ssh_key),
+                                                                            str(form.cleaned_data['ssh_passphrase']), 
+                                                                            request.user.id)
+                        Task.objects.create(task_id=celery_task_id, task_name="Get system information", initiated_by=request.user)
+                        messages.info(request, 'Successfully connected to your Puppet master server. \
+                                                A task to get system information has been initiated. \
+                                                <p><small>[{0}]</small></p>'.format(celery_task_id))
+                        return redirect('home')
+                    else:
+                        messages.error(request, 'Puppet or Mcollective is not installed/running on your server. Please setup and recheck again.')
                 else:
-                    messages.error(request, 'Puppet or Mcollective is not installed/running on your server. Please setup and recheck again.')
+                    messages.error(request, "Server public key doesn't match. Please recheck again (You could now become a victim of man-in-the-middle (MiTM) attacks.")
             else:
                 messages.error(request, 'Cannot connect to your server. Your SSH login certificate may be invalid or your server may be unavailable.')
             
             if 'ssh_key' in request.FILES: delete_tmp_file(tmp_ssh_key)
+            if 'ssh_server_pub_key' in request.FILES: delete_tmp_file(tmp_ssh_server_pub_key)
     else:
         form = SetupSSHForm(instance=request.user.sshprofile)
 
@@ -137,6 +150,7 @@ def ajax_get_system_info(request):
             celery_task_id = celery_ssh_run_get_system_info.delay(str(ssh_profile.ssh_server_address), 
                                                                 str(ssh_profile.ssh_username),
                                                                 str(ssh_profile.ssh_server_port),
+                                                                str(ssh_profile.ssh_server_pub_key),
                                                                 str(ssh_profile.ssh_key),
                                                                 str(form.cleaned_data['ssh_passphrase']), 
                                                                 request.user.id)
@@ -217,6 +231,7 @@ def ajax_update_package(request):
             celery_task_id = celery_ssh_run_update_package.delay(str(ssh_profile.ssh_server_address), 
                                                                 str(ssh_profile.ssh_username),
                                                                 str(ssh_profile.ssh_server_port),
+                                                                str(ssh_profile.ssh_server_pub_key),
                                                                 str(ssh_profile.ssh_key),
                                                                 str(form.cleaned_data['ssh_passphrase']),
                                                                 package_id,
@@ -249,6 +264,7 @@ def ajax_update_all_packages(request):
             celery_task_id = celery_ssh_run_update_all_packages.delay(str(ssh_profile.ssh_server_address), 
                                                                     str(ssh_profile.ssh_username),
                                                                     str(ssh_profile.ssh_server_port),
+                                                                    str(ssh_profile.ssh_server_pub_key),
                                                                     str(ssh_profile.ssh_key),
                                                                     str(form.cleaned_data['ssh_passphrase']),
                                                                     system_id,

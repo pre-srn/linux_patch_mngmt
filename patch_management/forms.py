@@ -8,15 +8,17 @@ class SetupSSHForm(forms.ModelForm):
 
     class Meta:
         model = SSHProfile
-        fields = ['ssh_server_address', 'ssh_server_port', 'ssh_username', 'ssh_key']
+        fields = ['ssh_server_address', 'ssh_server_port', 'ssh_username', 'ssh_server_pub_key', 'ssh_key',]
         labels = {
             "ssh_server_address": "SSH server address",
             "ssh_server_port": "SSH server port",
             "ssh_username": "SSH username",
-            "ssh_key": "SSH private key",
+            "ssh_server_pub_key": "SSH server public key",
+            "ssh_key": "SSH private key (for authentication)",
         }
         help_texts = {
-            "ssh_username": "Note: This must be a non-root user who is allowed to run Mcollective commands"
+            "ssh_username": "Note: This must be a non-root user who is allowed to run Mcollective commands",
+            "ssh_server_pub_key": "Note: This key is for validating the server public key to prevent man-in-the-middle (MiTM) attacks. By default, the Ed25519 key is used."
         }
 
     def __init__(self, *args, **kwargs):

@@ -10,6 +10,7 @@ class SSHProfile(models.Model):
     ssh_server_address = models.CharField(max_length=255, blank=True)
     ssh_server_port = models.PositiveSmallIntegerField(default=22, blank=True)
     ssh_username = models.CharField(max_length=255, blank=True)
+    ssh_server_pub_key = models.FileField(upload_to='uploaded_keys/')
     ssh_key = models.FileField(upload_to='uploaded_keys/')
 
 @receiver(post_save, sender=User)
