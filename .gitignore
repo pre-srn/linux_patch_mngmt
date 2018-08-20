@@ -89,5 +89,5 @@ local_settings.py
 db.sqlite3
 env_lpm/
 .vscode/
-**/migrations/
+patch_management/migrations/
 uploaded_keys/
