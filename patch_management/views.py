@@ -113,7 +113,7 @@ def setup_ssh(request):
                     else:
                         messages.error(request, 'Puppet or Mcollective is not installed/running on your server. Please setup and recheck again.')
                 else:
-                    messages.error(request, "Server public key doesn't match. Please recheck again (You could now become a victim of man-in-the-middle (MiTM) attacks.")
+                    messages.error(request, "Server public key doesn't match. Please verify your server authenticity again.")
             else:
                 messages.error(request, 'Cannot connect to your server. Your SSH login certificate may be invalid or your server may be unavailable.')
             

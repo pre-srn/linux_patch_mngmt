@@ -10,15 +10,9 @@ from fabric import Connection
 from invoke import UnexpectedExit
 
 def connect_ssh(ssh_addr, ssh_user, ssh_port, ssh_server_pub_key, ssh_key, ssh_passphrase):
-    conn = Connection(host=ssh_addr, 
-                    user=ssh_user, 
-                    port=ssh_port,
-                    connect_kwargs={
-                        'key_filename': ssh_key, 
-                        'passphrase': ssh_passphrase
-                        },
-                    connect_timeout="60"
-                    )
+    conn = Connection(host=ssh_addr, user=ssh_user, port=ssh_port, connect_timeout="60",
+                      connect_kwargs={'key_filename': ssh_key, 
+                                      'passphrase': ssh_passphrase})
     sock = socket.socket()
     connected = False
     pub_key_match = False
@@ -32,14 +26,18 @@ def connect_ssh(ssh_addr, ssh_user, ssh_port, ssh_server_pub_key, ssh_key, ssh_p
         expected_pub_key = read_public_key_file(ssh_server_pub_key)
         if (expected_pub_key == server_pub_key.get_base64()):
             pub_key_match = True
-        # Checking whether a linux command can be run
-        conn.run('uname -s', hide=True)
-        conn.close()
+            # Testing connection
+            conn.run('uname -s', hide=True)
+            conn.close()
+        else:
+            # Can connect to the server but the public key doesn't match
+            # Set the connection to None to prevent further usages
+            conn = None
         connected = True
-        return connected, pub_key_match, conn
     except Exception:
-        del conn
-        return connected, pub_key_match, None
+        # Network connection errors
+        conn = None
+    return connected, pub_key_match, conn
 
 
 def is_puppet_running(ssh_conn):

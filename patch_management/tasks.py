@@ -27,7 +27,7 @@ def celery_ssh_run_get_system_info(ssh_addr, ssh_user, ssh_port, ssh_server_pub_
             # Save all system information data
             save_system_information(connected_systems, request_user_id, sys_os_name, sys_os_ver, sys_kernel, package_manager, installed_packages, available_updates)
         else:
-            raise ConnectionError("Server public key doesn't match. Please recheck again (You could now become a victim of man-in-the-middle (MiTM) attacks.")
+            raise ConnectionError("Server public key doesn't match. Please verify your server authenticity again.")
     else:
         raise ConnectionError('Cannot connect to your Puppet master server. Your server may be unavailable or your SSH passphrase may be invalid.')
     return
@@ -66,7 +66,7 @@ def celery_ssh_run_update_package(ssh_addr, ssh_user, ssh_port, ssh_server_pub_k
             else:
                 raise SystemError('Puppet/Mcollective update process error.')
         else:
-            raise ConnectionError("Server public key doesn't match. Please recheck again (You could now become a victim of man-in-the-middle (MiTM) attacks.")
+            raise ConnectionError("Server public key doesn't match. Please verify your server authenticity again.")
     else:
         raise ConnectionError('Cannot connect to your Puppet master server. Your server may be unavailable or your SSH passphrase may be invalid.')
     return
@@ -107,7 +107,7 @@ def celery_ssh_run_update_all_packages(ssh_addr, ssh_user, ssh_port, ssh_server_
             else:
                 raise SystemError('Puppet/Mcollective update process error.')
         else:
-            raise ConnectionError("Server public key doesn't match. Please recheck again (You could now become a victim of man-in-the-middle (MiTM) attacks.")
+            raise ConnectionError("Server public key doesn't match. Please verify your server authenticity again.")
     else:
         raise ConnectionError('Cannot connect to your Puppet master server. Your server may be unavailable or your SSH passphrase may be invalid.')
     return
