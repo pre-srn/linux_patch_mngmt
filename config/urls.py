@@ -30,6 +30,4 @@ urlpatterns = [
     path('ajax/cve/table/', main_views.ajax_get_cve_info_table, name='get_cve_info_table'),
     path('ajax/task/table', main_views.ajax_get_task_info_table, name='get_task_info_table'),
     path('ajax/task/status/', main_views.ajax_check_task_status, name='check_task_status'),
-
-    path('admin/', admin.site.urls), # TODO remove this
 ]
