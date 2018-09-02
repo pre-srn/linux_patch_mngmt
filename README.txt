@@ -1,5 +1,6 @@
 Prerequisite
 - Please install RabbitMQ first (https://www.rabbitmq.com/download.html)
+- Install Python packages with "pip install -r requirements.txt"
 
 Only for the first time, please run these commands to create databases:
 1) manage.py makemigrations patch_management
